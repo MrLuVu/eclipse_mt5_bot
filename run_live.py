@@ -2,6 +2,7 @@ import time
 import json
 import pandas as pd
 import MetaTrader5 as mt5
+from datetime import datetime, timedelta
 from src.strategy import TradingStrategy
 
 # -----------------------------
@@ -49,8 +50,15 @@ def get_ohlcv(symbol, timeframe, n=100):
 def send_order(symbol, action, lot):
     if action not in ["BUY", "SELL"]:
         return False
+
+    tick = mt5.symbol_info_tick(symbol)
+    if tick is None:
+        print("Errore: impossibile ottenere tick")
+        return False
+
     order_type = mt5.ORDER_TYPE_BUY if action == "BUY" else mt5.ORDER_TYPE_SELL
-    price = mt5.symbol_info_tick(symbol).ask if action == "BUY" else mt5.symbol_info_tick(symbol).bid
+    price = tick.ask if action == "BUY" else tick.bid
+
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
         "symbol": symbol,
@@ -71,6 +79,25 @@ def send_order(symbol, action, lot):
     return True
 
 # -----------------------------
+# Funzione countdown candela
+# -----------------------------
+def seconds_to_next_candle(timeframe: str):
+    now = datetime.utcnow()
+    if timeframe.startswith('M'):
+        minutes = int(timeframe[1:])
+        delta = timedelta(minutes=minutes)
+        candle_start = now.replace(second=0, microsecond=0) - timedelta(minutes=now.minute % minutes)
+    elif timeframe.startswith('H'):
+        hours = int(timeframe[1:])
+        delta = timedelta(hours=hours)
+        candle_start = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=now.hour % hours)
+    else:
+        raise ValueError("Timeframe non supportato")
+    candle_end = candle_start + delta
+    remaining = candle_end - now
+    return remaining
+
+# -----------------------------
 # Loop principale live
 # -----------------------------
 while True:
@@ -82,12 +109,14 @@ while True:
 
     strat = TradingStrategy(SYMBOL, TIMEFRAME, df, params=strategy_params)
     strat.generate_signals()
-    
+
     signal = strat.signals.iloc[-1]['signal'] if not strat.signals.empty else None
 
     if signal in ["BUY", "SELL"]:
         send_order(SYMBOL, signal, LOT_SIZE)
     else:
-        print("Nessun segnale al momento")
+        remaining = seconds_to_next_candle(trading["timeframe"])
+        mins, secs = divmod(int(remaining.total_seconds()), 60)
+        print(f"Nessun segnale. Candela chiuderà tra {mins}m {secs}s.")
 
     time.sleep(DELAY)
