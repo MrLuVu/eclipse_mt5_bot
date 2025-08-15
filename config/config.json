@@ -1,0 +1,34 @@
+{
+  "broker": {
+    "mode": "demo",
+    "login": 0,
+    "password": "CHANGE_ME",
+    "server_demo": "ICMarkets-Demo",
+    "server_real": "ICMarketsSC-Live19",
+    "path_terminal": ""
+  },
+  "trading": {
+    "symbol": "EURUSD",
+    "timeframe": "M5",
+    "risk_per_trade_pct": 1.0,
+    "max_slippage_points": 20,
+    "magic_number": 777001,
+    "poll_seconds": 10,
+    "max_open_trades_per_symbol": 1
+  },
+  "strategy_params": {
+    "swing_period": 3,
+    "structure_lookback": 20,
+    "liquidity_threshold": 0.001,
+    "poi_validity_bars": 50,
+    "range_min_size": 0.005,
+    "risk_reward_ratio": 2.0,
+    "max_drawdown_pct": 5.0,
+    "session_asian_start": 23,
+    "session_asian_end": 6,
+    "session_london_start": 7,
+    "session_london_end": 10,
+    "session_ny_start": 14,
+    "session_ny_end": 17
+  }
+}

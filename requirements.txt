@@ -1,0 +1,6 @@
+pandas>=2.0
+numpy>=1.26
+MetaTrader5>=5.0
+pytz>=2023.3
+python-dotenv>=1.0
+loguru>=0.7
