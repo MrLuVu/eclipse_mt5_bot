@@ -69,6 +69,7 @@ def identifica_swing_points(candele: List[Candela]):
             swing_highs.append(curr)
         if curr.low < prev.low and curr.low < nxt.low:
             swing_lows.append(curr)
+    print(swing_highs, swing_lows)
     return swing_highs, swing_lows
 
 
