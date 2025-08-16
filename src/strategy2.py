@@ -1,7 +1,7 @@
 # =============================================================================
 # STRATEGY2.PY - Strategia Eclipse per Eclipse MT5 Bot
 # =============================================================================
-
+import MetaTrader5 as mt5
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass
@@ -105,6 +105,7 @@ def analizza_struttura_e_bos(swing_highs: List[Candela], swing_lows: List[Candel
     elif trend_precedente == "Bearish" and ultimo_high.high > penultimo_high.high:
         trend = "Bullish"
 
+    print("Trend, ultimo_bos_high, ultimo_bos_low", trend, ultimo_bos_high, ultimo_bos_low )
     return trend, ultimo_bos_high, ultimo_bos_low
 
 
@@ -207,7 +208,8 @@ def definisci_range_da_quasimodo(candele: List[Candela], timeframe: str) -> Opti
     return nuovo_range
 
 
-def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
+"""def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
+    print("Identifica_Poi timeframe: ", timeframe, "\nCandele: ", len(candele))
     lista_poi = []
     for i in range(1, len(candele) - 1):
         candela_prec = candele[i-1]
@@ -223,7 +225,7 @@ def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
             poi_bottom = candela_prec.low
             lista_poi.append(POI(tipo="Orderblock", direzione="Bearish", candela_di_riferimento=candela_prec,
                                  prezzo_di_attivazione_top=poi_top, prezzo_di_attivazione_bottom=poi_bottom,
-                                 key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high, \'low\': candela_prec.low, \'close\': candela_prec.close},
+                                 key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high, 'low': candela_prec.low, 'close': candela_prec.close},
                                  timeframe=timeframe))
 
         # 2. Order Block Rialzista
@@ -235,7 +237,7 @@ def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
             poi_bottom = candela_prec.low
             lista_poi.append(POI(tipo="Orderblock", direzione="Bullish", candela_di_riferimento=candela_prec,
                                  prezzo_di_attivazione_top=poi_top, prezzo_di_attivazione_bottom=poi_bottom,
-                                 key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high, \'low\': candela_prec.low, \'close\': candela_prec.close},
+                                 key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high, 'low': candela_prec.low, 'close': candela_prec.close},
                                  timeframe=timeframe))
 
         # 3. Inefficienza / Fair Value Gap (FVG) Rialzista
@@ -255,16 +257,103 @@ def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
                                  key_level_ohlc={}, timeframe=timeframe))
 
         # TODO: Implementare logica per Breaker, Hidden Base, Wick
+    return lista_poi"""
+def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
+    print("Identifica_Poi timeframe:", timeframe, " | Candele:", len(candele))
+    lista_poi = []
+
+    for i in range(1, len(candele) - 1):
+        candela_prec = candele[i-1]   # candela precedente
+        candela_curr = candele[i]     # candela centrale (candela di riferimento)
+        candela_succ = candele[i+1]   # candela successiva
+
+        # -------------------------------
+        # 1. ORDER BLOCK RIBASSISTA (ultima candela verde prima del dump rosso)
+        # -------------------------------
+        if candela_prec.close > candela_prec.open and candela_curr.close < candela_curr.open:
+            # Controllo se la candela successiva conferma la spinta ribassista
+            if candela_succ.low < candela_prec.low:
+                poi_top = candela_prec.open   # meglio usare corpo
+                poi_bottom = candela_prec.low
+                lista_poi.append(POI(
+                    tipo="Orderblock",
+                    direzione="Bearish",
+                    candela_di_riferimento=candela_prec,
+                    prezzo_di_attivazione_top=poi_top,
+                    prezzo_di_attivazione_bottom=poi_bottom,
+                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
+                                    'low': candela_prec.low, 'close': candela_prec.close},
+                    timeframe=timeframe
+                ))
+
+        # -------------------------------
+        # 2. ORDER BLOCK RIALZISTA (ultima candela rossa prima del pump verde)
+        # -------------------------------
+        if candela_prec.close < candela_prec.open and candela_curr.close > candela_curr.open:
+            # Controllo se la candela successiva conferma la spinta rialzista
+            if candela_succ.high > candela_prec.high:
+                poi_top = candela_prec.high
+                poi_bottom = candela_prec.open   # corpo
+                lista_poi.append(POI(
+                    tipo="Orderblock",
+                    direzione="Bullish",
+                    candela_di_riferimento=candela_prec,
+                    prezzo_di_attivazione_top=poi_top,
+                    prezzo_di_attivazione_bottom=poi_bottom,
+                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
+                                    'low': candela_prec.low, 'close': candela_prec.close},
+                    timeframe=timeframe
+                ))
+
+        # -------------------------------
+        # 3. FAIR VALUE GAP (FVG) RIALZISTA
+        # condizione: candela_prec.high < candela_succ.low
+        # e la candela centrale non ha coperto quel gap
+        # -------------------------------
+        if candela_prec.high < candela_succ.low and candela_curr.low > candela_prec.high:
+            poi_top = candela_succ.low
+            poi_bottom = candela_prec.high
+            lista_poi.append(POI(
+                tipo="Inefficiency",
+                direzione="Bullish",
+                candela_di_riferimento=candela_curr,
+                prezzo_di_attivazione_top=poi_top,
+                prezzo_di_attivazione_bottom=poi_bottom,
+                key_level_ohlc={},
+                timeframe=timeframe
+            ))
+
+        # -------------------------------
+        # 4. FAIR VALUE GAP (FVG) RIBASSISTA
+        # condizione: candela_prec.low > candela_succ.high
+        # e la candela centrale non ha coperto il gap
+        # -------------------------------
+        if candela_prec.low > candela_succ.high and candela_curr.high < candela_prec.low:
+            poi_top = candela_prec.low
+            poi_bottom = candela_succ.high
+            lista_poi.append(POI(
+                tipo="Inefficiency",
+                direzione="Bearish",
+                candela_di_riferimento=candela_curr,
+                prezzo_di_attivazione_top=poi_top,
+                prezzo_di_attivazione_bottom=poi_bottom,
+                key_level_ohlc={},
+                timeframe=timeframe
+            ))
+
+    # Debug finale
+    print(f"[DEBUG] Identificati {len(lista_poi)} POI su timeframe {timeframe}")
+    for poi in lista_poi[:5]:
+        print(f"  {poi.tipo} {poi.direzione} | Top={poi.prezzo_di_attivazione_top} | Bottom={poi.prezzo_di_attivazione_bottom} | Ref={poi.candela_di_riferimento.timestamp}")
 
     return lista_poi
 
 
-def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], swing_points_low: List[Candela], candele: List[Candela]) -> List[POI]:
+"""def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], swing_points_low: List[Candela], candele: List[Candela]) -> List[POI]:
     poi_validi = []
     for poi in lista_poi:
         has_taken_liquidity = False
         is_mitigated = False
-
         # REGOLA 2: Deve aver "preso" liquidità.
         if poi.direzione == "Bearish": # OB ribassista deve aver rotto un massimo precedente
             for swing_high in swing_points_high:
@@ -293,10 +382,63 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], sw
         if has_taken_liquidity and not is_mitigated:
             poi_validi.append(poi)
 
+    print(len(poi_validi))
+    return poi_validi"""
+def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], swing_points_low: List[Candela], candele: List[Candela]) -> List[POI]:
+    poi_validi = []
+
+    for poi in lista_poi:
+        has_taken_liquidity = False
+        is_mitigated = False
+
+        # -------------------------------
+        # (a) Deve aver preso liquidità
+        # -------------------------------
+        if poi.direzione == "Bearish":  # OB ribassista deve rompere un massimo precedente
+            for swing_high in swing_points_high:
+                future_candele = [c for c in candele if c.timestamp >= poi.candela_di_riferimento.timestamp]
+                if any(c.high > swing_high.high for c in future_candele):
+                    has_taken_liquidity = True
+                    break
+
+        elif poi.direzione == "Bullish":  # OB rialzista deve rompere un minimo precedente
+            for swing_low in swing_points_low:
+                future_candele = [c for c in candele if c.timestamp >= poi.candela_di_riferimento.timestamp]
+                if any(c.low < swing_low.low for c in future_candele):
+                    has_taken_liquidity = True
+                    break
+
+        # -------------------------------
+        # (b) Non deve essere mitigato
+        # -------------------------------
+        candele_successive = [c for c in candele if c.timestamp > poi.candela_di_riferimento.timestamp]
+        for c_succ in candele_successive:
+            if poi.direzione == "Bearish":
+                # Consideriamo chiusura dentro la zona come mitigazione
+                if c_succ.close >= poi.prezzo_di_attivazione_bottom and c_succ.close <= poi.prezzo_di_attivazione_top:
+                    is_mitigated = True
+                    break
+
+            elif poi.direzione == "Bullish":
+                if c_succ.close <= poi.prezzo_di_attivazione_top and c_succ.close >= poi.prezzo_di_attivazione_bottom:
+                    is_mitigated = True
+                    break
+
+        # -------------------------------
+        # (c) Regole finali + debug
+        # -------------------------------
+        if has_taken_liquidity and not is_mitigated:
+            poi_validi.append(poi)
+            print(f"[VALIDO] {poi.direzione} {poi.candela_di_riferimento.timestamp} POI a {poi.prezzo_di_attivazione_top:.5f} | Liquidity: OK | Mitigazione: NO")
+        else:
+            print(f"[SCARTATO] {poi.direzione} POI a {poi.prezzo_di_attivazione_top:.5f} | Liquidity: {has_taken_liquidity} | Mitigazione: {is_mitigated}")
+
+    print(f"[DEBUG] POI validi trovati: {len(poi_validi)}")
     return poi_validi
 
 
-# Funzioni placeholder per l\'interfaccia con il broker
+
+"""# Funzioni placeholder per l\'interfaccia con il broker
 def get_candele(coppia: str, timeframe: str, numero_candele: int) -> List[Candela]:
     # Questa è una funzione placeholder. In un bot reale, qui si interfaccierebbe con l\'API del broker.
     # Per ora, restituiamo candele fittizie per test.
@@ -311,7 +453,42 @@ def get_candele(coppia: str, timeframe: str, numero_candele: int) -> List[Candel
         high_price = max(open_price, close_price) + np.random.rand() * 0.0002
         low_price = min(open_price, close_price) - np.random.rand() * 0.0002
         candele_mock.append(Candela(timestamp, open_price, high_price, low_price, close_price))
-    return candele_mock
+    return candele_mock"""
+def get_candele(coppia: str, timeframe, numero_candele: int) -> List[Candela]:
+    """Ottiene candele reali da MetaTrader5 e le restituisce come lista di oggetti Candela"""
+    # Recupero dati reali da MT5
+    map = {
+        "M1" : mt5.TIMEFRAME_M1,
+        "H1" : mt5.TIMEFRAME_H1,
+        "4H" : mt5.TIMEFRAME_H4,
+    }
+    for k, v in map.items():
+        print(k, timeframe)
+        if k == timeframe:
+            timeframe = v
+            print(timeframe)
+            break
+    rates = mt5.copy_rates_from_pos(coppia, timeframe, 0, numero_candele)
+    if rates is None:
+        print(f"[ERRORE] Nessun dato ricevuto da MT5 per {coppia} su {timeframe}")
+        return []
+
+    df = pd.DataFrame(rates)
+    df["time"] = pd.to_datetime(df["time"], unit="s")
+
+    # Converte in lista di oggetti Candela
+    candele = []
+    for _, row in df.iterrows():
+        c = Candela(
+            timestamp=row["time"],
+            open=row["open"],
+            high=row["high"],
+            low=row["low"],
+            close=row["close"]
+        )
+        candele.append(c)
+
+    return candele
 
 def place_order(trade_details: dict) -> str:
     print(f"[MOCK] Piazzamento ordine: {trade_details}")
@@ -362,7 +539,7 @@ def trova_poi_del_bos_ltf(range_ltf: RangeMercato, candele_ltf: List[Candela]) -
 # -----------------------------------------------------------------------------
 # CONFIGURAZIONE GLOBALE (dal pseudocodice)
 # -----------------------------------------------------------------------------
-COPPIA_DI_VALUTE = "EUR/USD"
+COPPIA_DI_VALUTE = "BTC/USD"
 TIMEFRAME_HTF = "4H"
 TIMEFRAME_LTF = "15M"
 TIMEFRAME_ENTRY = "1M"
@@ -404,11 +581,12 @@ class TradingStrategy:
         return lottaggio
 
     def generate_signals(self):
-        if len(self.candele) < 50: # Necessarie abbastanza candele per l\'analisi
+        if len(self.candele) < 100: # Necessarie abbastanza candele per l\'analisi
             print("[DEBUG] Dati insufficienti per generare segnali.")
             return pd.DataFrame()
 
         # 1. Analisi HTF (High Timeframe)
+        print("Ciao", TIMEFRAME_HTF)
         candele_htf = get_candele(self.symbol, TIMEFRAME_HTF, 200) # Ottieni più candele per analisi HTF
         swing_highs_htf, swing_lows_htf = identifica_swing_points(candele_htf)
         trend_htf, bos_high_htf, bos_low_htf = analizza_struttura_e_bos(swing_highs_htf, swing_lows_htf, self.previous_trend_htf)
@@ -434,6 +612,7 @@ class TradingStrategy:
         trade_details = None
 
         if self.active_trade: # Se c\'è un trade attivo, gestiscilo
+            print("trand attivo")
             self.gestisci_posizione_attiva(self.active_trade, range_htf)
             if self.active_trade.stato == "Chiuso":
                 print(f"[DEBUG] Trade {self.active_trade.id} chiuso.")
@@ -443,7 +622,10 @@ class TradingStrategy:
             # Cerca opportunità di entrata
             for poi in valid_poi_htf:
                 # Condizione di entrata: prezzo entra nel POI e direzione del POI è allineata al trend HTF
+                print(poi.prezzo_di_attivazione_bottom, current_price, poi.prezzo_di_attivazione_top)
+                print(poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top)
                 if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
+                    print(trend_htf, poi.direzione)
                     if (trend_htf == "Bullish" and poi.direzione == "Bullish") or \
                        (trend_htf == "Bearish" and poi.direzione == "Bearish"):
                         print(f"[DEBUG] Prezzo nel POI HTF {poi.tipo} {poi.direzione}. Cerco conferma su LTF...")
@@ -463,6 +645,7 @@ class TradingStrategy:
                             }
                             break # Trovata un\'opportunità, esci dal ciclo POI
 
+        print(signal)
         self.signals = pd.DataFrame([{
             "time": self.candele[-1].timestamp,
             "price": current_price,
@@ -474,8 +657,8 @@ class TradingStrategy:
 
     def gestisci_entrata_a_mercato(self, poi_htf: POI, trend_htf: str) -> Optional[Trade]:
         # Metodo 2: Entrata con Conferma (più sicura)
-        # Aspetta un cambio di struttura (CHOCH) sul LTF
-        candele_ltf = get_candele(self.symbol, TIMEFRAME_LTF, 100) # Ottieni candele LTF
+        # Aspetta un cambio di struttura (CHOCH) sul LTFrelaxing 
+        candele_ltf = get_candele(self.symbol, TIMEFRAME_LTF, 200) # Ottieni candele LTF
         range_ltf = definisci_range_da_quasimodo(candele_ltf, TIMEFRAME_LTF)
 
         if range_ltf:
@@ -505,8 +688,8 @@ class TradingStrategy:
                         }
                         order_id = place_order(trade_details)
                         return Trade(id=order_id, coppia=self.symbol, tipo="SELL",
-                                     prezzo_entrata=entry_price, stop_loss=stop_loss,
-                                     take_profit_finale=take_profit, lottaggio=lottaggio, stato="Aperto")
+                                    prezzo_entrata=entry_price, stop_loss=stop_loss,
+                                    take_profit_finale=take_profit, lottaggio=lottaggio, stato="Aperto")
 
             # Esempio per un trade BUY: Trend HTF è Bullish, prezzo in POI HTF Bullish.
             # Aspettiamo un QM Rialzista sul LTF per confermare.
@@ -540,7 +723,7 @@ class TradingStrategy:
         # Metodo 1: Entrata Diretta (più rischiosa) - Fallback se non c\'è conferma LTF
         # Questo è un esempio semplificato, in un caso reale si raffinerebbe il POI HTF
         print("Nessuna conferma LTF, tentativo di entrata diretta (più rischiosa).")
-        entry_price = current_price
+        """entry_price = entry_price
         if poi_htf.direzione == "Bearish":
             stop_loss = poi_htf.prezzo_di_attivazione_top + SPREAD
             take_profit = trova_target_logico(poi_htf, trend_htf)
@@ -573,8 +756,8 @@ class TradingStrategy:
             }
             order_id = place_order(trade_details)
             return Trade(id=order_id, coppia=self.symbol, tipo="BUY",
-                         prezzo_entrata=entry_price, stop_loss=stop_loss,
-                         take_profit_finale=take_profit, lottaggio=lottaggio, stato="Aperto")
+                        prezzo_entrata=entry_price, stop_loss=stop_loss,
+                        take_profit_finale=take_profit, lottaggio=lottaggio, stato="Aperto")"""
         return None
 
     def gestisci_posizione_attiva(self, trade: Trade, range_htf: RangeMercato):
@@ -617,11 +800,11 @@ class TradingStrategy:
 
         # Controllo se SL o TP sono stati colpiti
         if (trade.tipo == "BUY" and current_price <= trade.stop_loss) or \
-           (trade.tipo == "SELL" and current_price >= trade.stop_loss):
+        (trade.tipo == "SELL" and current_price >= trade.stop_loss):
             trade.stato = "Chiuso"
             print(f"Trade {trade.id} chiuso per Stop Loss.")
         elif (trade.tipo == "BUY" and current_price >= trade.take_profit_finale) or \
-             (trade.tipo == "SELL" and current_price <= trade.take_profit_finale):
+            (trade.tipo == "SELL" and current_price <= trade.take_profit_finale):
             trade.stato = "Chiuso"
             print(f"Trade {trade.id} chiuso per Take Profit.")
 
@@ -632,11 +815,11 @@ if __name__ == "__main__":
     data_points = 200
     dates = [datetime.now() - timedelta(minutes=i*15) for i in range(data_points)][::-1]
     mock_data = {
-        \'time\': dates,
-        \'open\': np.random.uniform(1.04, 1.06, data_points),
-        \'high\': np.random.uniform(1.05, 1.07, data_points),
-        \'low\': np.random.uniform(1.03, 1.05, data_points),
-        \'close\': np.random.uniform(1.04, 1.06, data_points),
+        'time': dates,
+        'open': np.random.uniform(1.04, 1.06, data_points),
+        'high': np.random.uniform(1.05, 1.07, data_points),
+        'low': np.random.uniform(1.03, 1.05, data_points),
+        'close': np.random.uniform(1.04, 1.06, data_points),
     }
     df = pd.DataFrame(mock_data)
 
@@ -658,5 +841,4 @@ if __name__ == "__main__":
             if strategy.active_trade.stato == "Chiuso":
                 break
         print(f"Stato finale trade simulato: {strategy.active_trade.stato}")
-
 
