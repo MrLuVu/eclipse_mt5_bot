@@ -1,11 +1,7 @@
-# =============================================================================
-# STRATEGY2.PY - Strategia Eclipse per Eclipse MT5 Bot
-# =============================================================================
-import MetaTrader5 as mt5
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime, timedelta
 
 
@@ -22,6 +18,15 @@ class Candela:
 
 
 @dataclass
+class SwingPoint:
+    candela: Candela
+    tipo: str  # "HIGH" o "LOW"
+    timeframe: str
+    confermato: bool = False
+    liquidita_presa: bool = False
+
+
+@dataclass
 class POI:
     tipo: str
     direzione: str
@@ -31,6 +36,7 @@ class POI:
     key_level_ohlc: dict
     e_mitigato: bool = False
     timeframe: str = ""
+    swing_point_origine: Optional[SwingPoint] = None
 
 
 @dataclass
@@ -59,8 +65,65 @@ class Trade:
 
 
 # -----------------------------------------------------------------------------
-# FUNZIONI DI SUPPORTO (DAL PSEUDOCODICE)
+# FUNZIONI DI SUPPORTO MIGLIORATE PER LA FRATTALITÀ
 # -----------------------------------------------------------------------------
+def identifica_swing_points_frattali(candele: List[Candela], period: int = 3, timeframe: str = "") -> List[SwingPoint]:
+    """
+    Implementazione migliorata della Formazione delle 3 Candele secondo la strategia Eclipse.
+    
+    Regole:
+    - La seconda candela deve essere sempre la più alta o la più bassa delle 3
+    - I colori delle candele non sono importanti, solo la formazione
+    - Per un massimo: la candela centrale deve avere il high più alto delle 3
+    - Per un minimo: la candela centrale deve avere il low più basso delle 3
+    """
+    swing_points = []
+    
+    # Assicuriamoci di avere abbastanza candele per l'analisi
+    if len(candele) < period:
+        print(f"[DEBUG] Dati insufficienti per swing points su {timeframe}: {len(candele)} candele (minimo {period})")
+        return swing_points
+    
+    # Itera attraverso le candele per identificare i pattern di 3 candele
+    for i in range(period // 2, len(candele) - period // 2):
+        # Prendi le candele nel range del period
+        window = candele[i - period // 2:i + period // 2 + 1]
+        center_candle = candele[i]
+        
+        # Verifica se è un Swing High (massimo)
+        is_swing_high = True
+        for candle in window:
+            if candle.high > center_candle.high:
+                is_swing_high = False
+                break
+        
+        # Verifica se è un Swing Low (minimo)
+        is_swing_low = True
+        for candle in window:
+            if candle.low < center_candle.low:
+                is_swing_low = False
+                break
+        
+        # Aggiungi il swing point se identificato
+        if is_swing_high and not is_swing_low:
+            swing_points.append(SwingPoint(
+                candela=center_candle,
+                tipo="HIGH",
+                timeframe=timeframe,
+                confermato=False
+            ))
+        elif is_swing_low and not is_swing_high:
+            swing_points.append(SwingPoint(
+                candela=center_candle,
+                tipo="LOW",
+                timeframe=timeframe,
+                confermato=False
+            ))
+    
+    print(f"[DEBUG] Identificati {len(swing_points)} swing points su {timeframe}")
+    return swing_points
+
+"""
 def identifica_swing_points(candele: List[Candela]):
     swing_highs, swing_lows = [], []
     for i in range(1, len(candele) - 1):
@@ -69,9 +132,9 @@ def identifica_swing_points(candele: List[Candela]):
             swing_highs.append(curr)
         if curr.low < prev.low and curr.low < nxt.low:
             swing_lows.append(curr)
-    return swing_highs, swing_lows
+    return swing_highs, swing_lows"""
 
-
+"""
 def analizza_struttura_e_bos(swing_highs: List[Candela], swing_lows: List[Candela], trend_precedente: str = "Indefinito"):
     if len(swing_highs) < 2 or len(swing_lows) < 2:
         return "Indefinito", None, None
@@ -106,9 +169,102 @@ def analizza_struttura_e_bos(swing_highs: List[Candela], swing_lows: List[Candel
         trend = "Bullish"
 
     print("Trend, ultimo_bos_high, ultimo_bos_low", trend, ultimo_bos_high, ultimo_bos_low )
-    return trend, ultimo_bos_high, ultimo_bos_low
+    return trend, ultimo_bos_high, ultimo_bos_low"""
 
+def analizza_struttura_e_bos_frattale(swing_points: List[SwingPoint], trend_precedente: str = "Indefinito"):
+    """
+    Analisi della struttura di mercato migliorata con logica BOS/CHOCH secondo Eclipse.
+    
+    Concetti chiave:
+    - HH (Higher High): Massimo più alto
+    - HL (Higher Low): Minimo più alto  
+    - LL (Lower Low): Minimo più basso
+    - LH (Lower High): Massimo più basso
+    - BOS (Break of Structure): Rottura strutturale
+    - CHOCH (Change of Character): Cambio di carattere
+    """
+    swing_highs = [sp for sp in swing_points if sp.tipo == "HIGH"]
+    swing_lows = [sp for sp in swing_points if sp.tipo == "LOW"]
+    
+    if len(swing_highs) < 2 or len(swing_lows) < 2:
+        return "Indefinito", None, None, swing_points
 
+    # Ordina gli swing points per data
+    swing_highs.sort(key=lambda sp: sp.candela.timestamp)
+    swing_lows.sort(key=lambda sp: sp.candela.timestamp)
+
+    ultimo_high = swing_highs[-1]
+    penultimo_high = swing_highs[-2]
+    ultimo_low = swing_lows[-1]
+    penultimo_low = swing_lows[-2]
+
+    trend = "Indefinito"
+    ultimo_bos_high = None
+    ultimo_bos_low = None
+
+    # Logica di conferma degli swing points secondo Eclipse
+    # "In una situazione rialzista, fino a quando un nuovo HH è stato creato non possiamo confermare il nostro HL"
+    # "In una situazione ribassista non possiamo confermare il nostro LH fino a quando non si è creato un LL"
+    
+    # Uptrend: Higher Highs (HH) e Higher Lows (HL)
+    if ultimo_high.candela.high > penultimo_high.candela.high:
+        # Abbiamo un HH, ora possiamo confermare gli HL precedenti
+        for sp in swing_lows:
+            if sp.candela.timestamp < ultimo_high.candela.timestamp:
+                sp.confermato = True
+        
+        if ultimo_low.candela.low > penultimo_low.candela.low:
+            trend = "Bullish"
+            ultimo_bos_high = ultimo_high
+            ultimo_high.confermato = True
+    
+    # Downtrend: Lower Highs (LH) e Lower Lows (LL)
+    elif ultimo_low.candela.low < penultimo_low.candela.low:
+        # Abbiamo un LL, ora possiamo confermare gli LH precedenti
+        for sp in swing_highs:
+            if sp.candela.timestamp < ultimo_low.candela.timestamp:
+                sp.confermato = True
+        
+        if ultimo_high.candela.high < penultimo_high.candela.high:
+            trend = "Bearish"
+            ultimo_bos_low = ultimo_low
+            ultimo_low.confermato = True
+
+    # Inversione da Bullish a Bearish (CHOCH)
+    if trend_precedente == "Bullish" and ultimo_low.candela.low < penultimo_low.candela.low:
+        trend = "Bearish"
+        print(f"[DEBUG] CHOCH rilevato: da Bullish a Bearish")
+    
+    # Inversione da Bearish a Bullish (CHOCH)
+    elif trend_precedente == "Bearish" and ultimo_high.candela.high > penultimo_high.candela.high:
+        trend = "Bullish"
+        print(f"[DEBUG] CHOCH rilevato: da Bearish a Bullish")
+
+    print(f"[DEBUG] Trend: {trend}, BOS High: {ultimo_bos_high}, BOS Low: {ultimo_bos_low}")
+    return trend, ultimo_bos_high, ultimo_bos_low, swing_points
+def identifica_liquidita_swing_points(swing_points: List[SwingPoint]) -> Dict[str, List[float]]:
+    """
+    Identifica le zone di liquidità basate sui swing points secondo la strategia Eclipse.
+    
+    Concetti:
+    - Buy Side Liquidity: al di sopra di ogni Swing High (Buy Stops)
+    - Sell Side Liquidity: al di sotto di ogni Swing Low (Sell Stops)
+    """
+    liquidita = {
+        "buy_side": [],  # Livelli di liquidità buy (sopra swing highs)
+        "sell_side": []  # Livelli di liquidità sell (sotto swing lows)
+    }
+    
+    for sp in swing_points:
+        if sp.tipo == "HIGH" and not sp.liquidita_presa:
+            # Buy Side Liquidity sopra il swing high
+            liquidita["buy_side"].append(sp.candela.high)
+        elif sp.tipo == "LOW" and not sp.liquidita_presa:
+            # Sell Side Liquidity sotto il swing low
+            liquidita["sell_side"].append(sp.candela.low)
+    
+    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})")
+    return liquidita
 def trova_ultimo_low_prima_di(timestamp, lista_lows):
     candidates = [c for c in lista_lows if c.timestamp < timestamp]
     return max(candidates, key=lambda c: c.timestamp) if candidates else None
@@ -128,7 +284,7 @@ def trova_primo_high_dopo(timestamp, lista_highs):
     candidates = [c for c in lista_highs if c.timestamp > timestamp]
     return min(candidates, key=lambda c: c.timestamp) if candidates else None
 
-
+"""
 def definisci_range_da_quasimodo(candele: List[Candela], timeframe: str) -> Optional[RangeMercato]:
     print(f"Avvio identificazione Range su timeframe {timeframe}...")
     tutti_swing_highs, tutti_swing_lows = identifica_swing_points(candele)
@@ -205,9 +361,89 @@ def definisci_range_da_quasimodo(candele: List[Candela], timeframe: str) -> Opti
     ]
 
     print(f"Range valido definito su {timeframe}: Low a {nuovo_range.strong_low.low}, High a {nuovo_range.strong_high.high}")
+    return nuovo_range"""
+
+def definisci_range_da_quasimodo(candele: List[Candela], timeframe: str) -> Optional[RangeMercato]:
+    print(f"Avvio identificazione Range su timeframe {timeframe}...")
+    swing_points = identifica_swing_points_frattali(candele, timeframe=timeframe)
+    swing_highs = [sp.candela for sp in swing_points if sp.tipo == "HIGH"]
+    swing_lows = [sp.candela for sp in swing_points if sp.tipo == "LOW"]
+
+    if len(swing_highs) < 2 or len(swing_lows) < 2:
+        print("Dati insufficienti (swing points) per definire un range.")
+        return None
+
+    strong_high_del_range = None
+    for i in range(len(swing_highs) - 1, 0, -1):
+        high_attuale = swing_highs[i]
+        high_precedente = swing_highs[i-1]
+
+        stop_hunt_eseguito = high_attuale.high > high_precedente.high
+
+        bos_al_ribasso_confermato = False
+        low_precedente_allo_stophunt = trova_ultimo_low_prima_di(high_attuale.timestamp, swing_lows)
+        if low_precedente_allo_stophunt:
+            low_successivo_allo_stophunt = trova_primo_low_dopo(high_attuale.timestamp, swing_lows)
+            if low_successivo_allo_stophunt and (low_successivo_allo_stophunt.low < low_precedente_allo_stophunt.low):
+                bos_al_ribasso_confermato = True
+
+        if stop_hunt_eseguito and bos_al_ribasso_confermato:
+            strong_high_del_range = high_attuale
+            print(f"QM Ribassista (Strong High) trovato a: {strong_high_del_range.high} in data {strong_high_del_range.timestamp}")
+            break
+
+    if strong_high_del_range is None:
+        print("Nessun QM Ribassista (Strong High) valido trovato.")
+        return None
+
+    strong_low_del_range = None
+    swing_lows_precedenti = [low for low in swing_lows if low.timestamp < strong_high_del_range.timestamp]
+    for i in range(len(swing_lows_precedenti) - 1, 0, -1):
+        low_attuale = swing_lows_precedenti[i]
+        low_precedente = swing_lows_precedenti[i-1]
+
+        stop_hunt_eseguito = low_attuale.low < low_precedente.low
+
+        bos_al_rialzo_confermato = False
+        high_precedente_allo_stophunt = trova_ultimo_high_prima_di(low_attuale.timestamp, swing_highs)
+        if high_precedente_allo_stophunt:
+            high_successivo_allo_stophunt = trova_primo_high_dopo(low_attuale.timestamp, swing_highs)
+            if high_successivo_allo_stophunt and (high_successivo_allo_stophunt.high > high_precedente_allo_stophunt.high):
+                bos_al_rialzo_confermato = True
+
+        if stop_hunt_eseguito and bos_al_rialzo_confermato:
+            strong_low_del_range = low_attuale
+            print(f"QM Rialzista (Strong Low) trovato a: {strong_low_del_range.low} in data {strong_low_del_range.timestamp}")
+            break
+
+    if strong_low_del_range is None:
+        print("Nessun QM Rialzista (Strong Low) valido trovato prima dello Strong High.")
+        return None
+
+    nuovo_range = RangeMercato(
+        strong_high=strong_high_del_range,
+        strong_low=strong_low_del_range,
+        weak_highs=[],  # Verranno popolati dopo
+        weak_lows=[],   # Verranno popolati dopo
+        liquidita_esterna_buy_side=strong_high_del_range.high,
+        liquidita_esterna_sell_side=strong_low_del_range.low,
+        liquidita_interna=[],
+        timeframe=timeframe
+    )
+
+    nuovo_range.weak_highs = [
+        h for h in swing_highs
+        if strong_low_del_range.timestamp < h.timestamp < strong_high_del_range.timestamp
+    ]
+    nuovo_range.weak_lows = [
+        l for l in swing_lows
+        if strong_low_del_range.timestamp < l.timestamp < strong_high_del_range.timestamp
+    ]
+
+    print(f"Range valido definito su {timeframe}: Low a {nuovo_range.strong_low.low}, High a {nuovo_range.strong_high.high}")
     return nuovo_range
 
-
+"""
 def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
     print("Identifica_Poi timeframe:", timeframe, " | Candele:", len(candele))
     lista_poi = []
@@ -338,6 +574,184 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], sw
             poi_validi.append(poi)
 
     print(f"[DEBUG] Identificati {len(poi_validi)} POI validi dopo il filtraggio.")
+    return poi_validi"""
+
+def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint], timeframe: str) -> List[POI]:
+    """
+    Identifica tutti i POI basandosi sui swing points e sulle formazioni di candele.
+    Versione migliorata che considera la relazione con gli swing points.
+    """
+    print("Identifica_Poi timeframe:", timeframe, " | Candele:", len(candele), " | Swing Points:", len(swing_points))
+    lista_poi = []
+
+    for i in range(1, len(candele) - 1):
+        candela_prec = candele[i-1]   # candela precedente
+        candela_curr = candele[i]     # candela centrale (candela di riferimento)
+        candela_succ = candele[i+1]   # candela successiva
+
+        # Trova il swing point associato a questa candela (se esiste)
+        swing_point_associato = None
+        for sp in swing_points:
+            if sp.candela.timestamp == candela_curr.timestamp:
+                swing_point_associato = sp
+                break
+
+        # -------------------------------
+        # 1. ORDER BLOCK RIBASSISTA (ultima candela verde prima del dump rosso)
+        # -------------------------------
+        if candela_prec.close > candela_prec.open and candela_curr.close < candela_curr.open:
+            # Controllo se la candela successiva conferma la spinta ribassista
+            if candela_succ.low < candela_prec.low:
+                poi_top = candela_prec.close   # Usa il close della candela verde
+                poi_bottom = candela_prec.low
+                lista_poi.append(POI(
+                    tipo="Orderblock",
+                    direzione="Bearish",
+                    candela_di_riferimento=candela_prec,
+                    prezzo_di_attivazione_top=poi_top,
+                    prezzo_di_attivazione_bottom=poi_bottom,
+                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
+                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
+                    timeframe=timeframe,
+                    swing_point_origine=swing_point_associato
+                ))
+
+        # -------------------------------
+        # 2. ORDER BLOCK RIALZISTA (ultima candela rossa prima del pump verde)
+        # -------------------------------
+        if candela_prec.close < candela_prec.open and candela_curr.close > candela_curr.open:
+            # Controllo se la candela successiva conferma la spinta rialzista
+            if candela_succ.high > candela_prec.high:
+                poi_top = candela_prec.high
+                poi_bottom = candela_prec.close   # Usa il close della candela rossa
+                lista_poi.append(POI(
+                    tipo="Orderblock",
+                    direzione="Bullish",
+                    candela_di_riferimento=candela_prec,
+                    prezzo_di_attivazione_top=poi_top,
+                    prezzo_di_attivazione_bottom=poi_bottom,
+                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
+                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
+                    timeframe=timeframe,
+                    swing_point_origine=swing_point_associato
+                ))
+
+        # -------------------------------
+        # 3. FAIR VALUE GAP (FVG) RIALZISTA
+        # -------------------------------
+        if candela_prec.high < candela_succ.low and candela_curr.low > candela_prec.high:
+            poi_top = candela_succ.low
+            poi_bottom = candela_prec.high
+            lista_poi.append(POI(
+                tipo="Inefficiency",
+                direzione="Bullish",
+                candela_di_riferimento=candela_curr,
+                prezzo_di_attivazione_top=poi_top,
+                prezzo_di_attivazione_bottom=poi_bottom,
+                key_level_ohlc={},
+                timeframe=timeframe,
+                swing_point_origine=swing_point_associato
+            ))
+
+        # -------------------------------
+        # 4. FAIR VALUE GAP (FVG) RIBASSISTA
+        # -------------------------------
+        if candela_prec.low > candela_succ.high and candela_curr.high < candela_prec.low:
+            poi_top = candela_prec.low
+            poi_bottom = candela_succ.high
+            lista_poi.append(POI(
+                tipo="Inefficiency",
+                direzione="Bearish",
+                candela_di_riferimento=candela_curr,
+                prezzo_di_attivazione_top=poi_top,
+                prezzo_di_attivazione_bottom=poi_bottom,
+                key_level_ohlc={},
+                timeframe=timeframe,
+                swing_point_origine=swing_point_associato
+            ))
+
+    # Debug finale
+    print(f"[DEBUG] Identificati {len(lista_poi)} POI su timeframe {timeframe}")
+    for poi in lista_poi[:3]:  # Mostra solo i primi 3 per non intasare i log
+        print(f"  {poi.tipo} {poi.direzione} | Top={poi.prezzo_di_attivazione_top:.5f} | Bottom={poi.prezzo_di_attivazione_bottom:.5f} | Ref={poi.candela_di_riferimento.timestamp}")
+
+    return lista_poi
+
+
+def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], candele: List[Candela]) -> List[POI]:
+    """
+    Filtra i POI secondo le regole della strategia Eclipse.
+    
+    REGOLA 2: Deve aver "preso" liquidità
+    REGOLA 3: Non deve essere mitigato
+    """
+    poi_validi = []
+    
+    for poi in lista_poi:
+        has_taken_liquidity = False
+        is_mitigated = False
+
+        # REGOLA 2: Deve aver "preso" liquidità
+        # Verifica se il POI è associato a un movimento che ha rotto liquidità
+        if poi.swing_point_origine:
+            # Se il POI è associato a uno swing point, verifica se ha preso liquidità
+            if poi.direzione == "Bearish":
+                # Per un POI bearish, verifica se ha rotto un low precedente
+                for sp in swing_points:
+                    if (sp.tipo == "LOW" and 
+                        sp.candela.timestamp < poi.candela_di_riferimento.timestamp and
+                        poi.candela_di_riferimento.low < sp.candela.low):
+                        has_taken_liquidity = True
+                        sp.liquidita_presa = True
+                        break
+            elif poi.direzione == "Bullish":
+                # Per un POI bullish, verifica se ha rotto un high precedente
+                for sp in swing_points:
+                    if (sp.tipo == "HIGH" and 
+                        sp.candela.timestamp < poi.candela_di_riferimento.timestamp and
+                        poi.candela_di_riferimento.high > sp.candela.high):
+                        has_taken_liquidity = True
+                        sp.liquidita_presa = True
+                        break
+        else:
+            # Se non è associato a uno swing point, usa la logica precedente
+            if poi.direzione == "Bearish":
+                swing_lows = [sp.candela for sp in swing_points if sp.tipo == "LOW"]
+                for swing_low in swing_lows:
+                    if poi.candela_di_riferimento.low < swing_low.low and poi.candela_di_riferimento.timestamp > swing_low.timestamp:
+                        has_taken_liquidity = True
+                        break
+            elif poi.direzione == "Bullish":
+                swing_highs = [sp.candela for sp in swing_points if sp.tipo == "HIGH"]
+                for swing_high in swing_highs:
+                    if poi.candela_di_riferimento.high > swing_high.high and poi.candela_di_riferimento.timestamp > swing_high.timestamp:
+                        has_taken_liquidity = True
+                        break
+
+        # REGOLA 3: Non deve essere mitigato
+        # Verifica se il prezzo è tornato nella zona del POI dopo la sua formazione
+        for candela in candele:
+            if candela.timestamp <= poi.candela_di_riferimento.timestamp:
+                continue
+                
+            if poi.direzione == "Bearish":
+                # Per un POI bearish, è mitigato se il prezzo torna sopra il top
+                if candela.high >= poi.prezzo_di_attivazione_top:
+                    is_mitigated = True
+                    poi.e_mitigato = True
+                    break
+            elif poi.direzione == "Bullish":
+                # Per un POI bullish, è mitigato se il prezzo torna sotto il bottom
+                if candela.low <= poi.prezzo_di_attivazione_bottom:
+                    is_mitigated = True
+                    poi.e_mitigato = True
+                    break
+
+        # Aggiungi il POI solo se ha preso liquidità e non è mitigato
+        if has_taken_liquidity and not is_mitigated:
+            poi_validi.append(poi)
+
+    print(f"[DEBUG] POI validi dopo filtraggio: {len(poi_validi)}/{len(lista_poi)}")
     return poi_validi
 
 
@@ -456,25 +870,38 @@ SPREAD = 0.0001 # Esempio di spread
 # STRATEGIA TRADING (Classe principale)
 # -----------------------------------------------------------------------------
 class TradingStrategy:
-    def __init__(self, symbol: str, timeframe: str, data: pd.DataFrame, params: dict = {}):
+    def __init__(self, symbol: str, main_timeframe: str, ohlcv_data: Dict[str, pd.DataFrame], params: dict):
         self.symbol = symbol
-        self.timeframe = timeframe
-        self.data = data
+        self.main_timeframe = main_timeframe
+        self.ohlcv_data = ohlcv_data
         self.params = params
-        self.signals = pd.DataFrame()
-        self.active_trade: Optional[Trade] = None # Per gestire un solo trade alla volta
-        self.previous_trend_htf = "Indefinito"
+        self.signals = pd.DataFrame(columns=["time", "signal", "stop_loss", "take_profit"])
+        
+        # Converti tutti i DataFrame in liste di oggetti Candela
+        self.candele_multi_timeframe = {
+            tf: self._df_to_candele(df) 
+            for tf, df in ohlcv_data.items()
+        }
+        
+        # Stato della strategia
+        self.trend = "Indefinito"
+        self.ultimo_bos_high = None
+        self.ultimo_bos_low = None
+        self.range_mercato = None
+        self.swing_points_multi_timeframe = {}
+        self.liquidita_multi_timeframe = {}
 
-        self.candele = [
-            Candela(
+    def _df_to_candele(self, df: pd.DataFrame) -> List[Candela]:
+        candele = []
+        for _, row in df.iterrows():
+            candele.append(Candela(
                 timestamp=row["time"],
                 open=row["open"],
                 high=row["high"],
                 low=row["low"],
-                close=row["close"],
-            )
-            for _, row in data.iterrows()
-        ]
+                close=row["close"]
+            ))
+        return candele
 
     def calculate_lot_size(self, stop_loss_pips: float) -> float:
         # Calcola la dimensione del lotto in base al rischio per trade
@@ -485,79 +912,221 @@ class TradingStrategy:
         return lottaggio
 
     def generate_signals(self):
-        if len(self.candele) < 100: # Necessarie abbastanza candele per l\'analisi
-            print("[DEBUG] Dati insufficienti per generare segnali.")
-            return pd.DataFrame()
+        # Ottieni le candele per il timeframe principale
+        main_candele = self.candele_multi_timeframe.get(self.main_timeframe)
+        if not main_candele:
+            print(f"[ERRORE] Dati non disponibili per il timeframe principale: {self.main_timeframe}")
+            return
 
-        # 1. Analisi HTF (High Timeframe)
-        print("Ciao", TIMEFRAME_HTF)
-        candele_htf = get_candele(self.symbol, TIMEFRAME_HTF, 200) # Ottieni più candele per analisi HTF
-        swing_highs_htf, swing_lows_htf = identifica_swing_points(candele_htf)
-        trend_htf, bos_high_htf, bos_low_htf = analizza_struttura_e_bos(swing_highs_htf, swing_lows_htf, self.previous_trend_htf)
-        self.previous_trend_htf = trend_htf # Aggiorna il trend precedente
+        print(f"[DEBUG] Analisi su timeframe principale: {self.main_timeframe} con {len(main_candele)} candele")
 
-        print(f"[DEBUG] Trend HTF rilevato: {trend_htf}")
+        # 1. Identificazione Swing Points su tutti i timeframe
+        for tf_name, candele_tf in self.candele_multi_timeframe.items():
+            if candele_tf:
+                swing_period = self.params.get("swing_period", 3)
+                swing_points = identifica_swing_points_frattali(candele_tf, swing_period, tf_name)
+                self.swing_points_multi_timeframe[tf_name] = swing_points
+                
+                # Identifica liquidità per questo timeframe
+                liquidita = identifica_liquidita_swing_points(swing_points)
+                self.liquidita_multi_timeframe[tf_name] = liquidita
 
-        range_htf = definisci_range_da_quasimodo(candele_htf, TIMEFRAME_HTF)
-        if not range_htf:
-            print("[DEBUG] Nessun range HTF valido.")
-            return pd.DataFrame()
-        print(f"[DEBUG] Range HTF definito: Low={range_htf.strong_low.low}, High={range_htf.strong_high.high}")
+        # 2. Analisi Struttura e BOS sul timeframe principale
+        main_swing_points = self.swing_points_multi_timeframe.get(self.main_timeframe, [])
+        if main_swing_points:
+            self.trend, self.ultimo_bos_high, self.ultimo_bos_low, updated_swing_points = analizza_struttura_e_bos_frattale(
+                main_swing_points, self.trend
+            )
+            self.swing_points_multi_timeframe[self.main_timeframe] = updated_swing_points
+            print(f"[DEBUG] Trend attuale ({self.main_timeframe}): {self.trend}")
 
-        # 2. Identificazione e Filtraggio POI HTF
-        all_poi_htf = identifica_tutti_poi(candele_htf, TIMEFRAME_HTF)
-        valid_poi_htf = filtra_poi_validi(all_poi_htf, swing_highs_htf, swing_lows_htf, candele_htf)
+        # 3. Identificazione Range di Mercato (Quasimodo) sul timeframe principale
+        self.range_mercato = definisci_range_da_quasimodo(main_candele, self.main_timeframe)
+        if self.range_mercato:
+            print(f"[DEBUG] Range di Mercato ({self.main_timeframe}): Strong High={self.range_mercato.strong_high.high:.5f}, Strong Low={self.range_mercato.strong_low.low:.5f}")
 
-        print(f"[DEBUG] POI HTF validi trovati: {len(valid_poi_htf)}")
+        # 4. Identificazione POI su tutti i timeframe disponibili
+        all_poi = []
+        for tf_name, candele_tf in self.candele_multi_timeframe.items():
+            if candele_tf and tf_name in self.swing_points_multi_timeframe:
+                swing_points_tf = self.swing_points_multi_timeframe[tf_name]
+                current_tf_poi = identifica_tutti_poi(candele_tf, swing_points_tf, tf_name)
+                valid_tf_poi = filtra_poi_validi(current_tf_poi, swing_points_tf, candele_tf)
+                all_poi.extend(valid_tf_poi)
+        
+        print(f"[DEBUG] Totale POI validi identificati su tutti i timeframe: {len(all_poi)}")
 
-        # Logica di entrata a mercato
-        current_price = self.candele[-1].close
-        signal = "HOLD"
-        trade_details = None
+        # 5. Logica di Trading migliorata con considerazione frattale
+        signal = None
+        stop_loss = 0.0
+        take_profit = 0.0
+        last_candle_main_tf = main_candele[-1]
 
-        if self.active_trade: # Se c\'è un trade attivo, gestiscilo
-            print("trand attivo")
-            self.gestisci_posizione_attiva(self.active_trade, range_htf)
-            if self.active_trade.stato == "Chiuso":
-                print(f"[DEBUG] Trade {self.active_trade.id} chiuso.")
-                self.active_trade = None
-            signal = "ACTIVE_TRADE"
-        else:
-            # Cerca opportunità di entrata
-            for poi in valid_poi_htf:
-                # Condizione di entrata: prezzo entra nel POI e direzione del POI è allineata al trend HTF
-                print(poi.prezzo_di_attivazione_bottom, current_price, poi.prezzo_di_attivazione_top)
-                print(poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top)
+        # Prioritizza i POI per rilevanza (timeframe più alti hanno priorità)
+        timeframe_priority = {"MN1": 7, "W1": 6, "D1": 5, "H4": 4, "H1": 3, "M30": 2, "M15": 1, "M5": 0, "M1": -1}
+        all_poi.sort(key=lambda poi: timeframe_priority.get(poi.timeframe, -1), reverse=True)
+
+        for poi in all_poi:
+            # Verifica validità temporale del POI
+            # La validità del POI dovrebbe essere relativa al timeframe del POI stesso
+            # e non solo al timeframe principale
+            poi_validity_bars = self.params.get("poi_validity_bars", 50)
+            # Converti poi_validity_bars in minuti per confronto
+            # Assumiamo che poi_validity_bars sia in barre del timeframe del POI
+            # Questo è un placeholder, la conversione esatta dipende dalla granularità del timeframe
+            # Per ora, usiamo una stima approssimativa o un valore fisso per M1
+            
+            # Per una logica più precisa, dovremmo avere una mappa dei minuti per timeframe
+            timeframe_to_minutes = {
+                "M1": 1, "M5": 5, "M15": 15, "M30": 30,
+                "H1": 60, "H4": 240, "D1": 1440, "W1": 10080, "MN1": 43200
+            }
+            poi_timeframe_minutes = timeframe_to_minutes.get(poi.timeframe, 1) # Default a M1 se non trovato
+            max_validity_minutes = poi_validity_bars * poi_timeframe_minutes
+
+            time_diff_minutes = (last_candle_main_tf.timestamp - poi.candela_di_riferimento.timestamp).total_seconds() / 60
+            
+            if time_diff_minutes > max_validity_minutes:
+                print(f"[DEBUG] POI scartato per anzianità: {poi.tipo} {poi.direzione} su {poi.timeframe} (vecchio di {time_diff_minutes:.2f} min, max {max_validity_minutes} min)")
+                continue
+
+            # Verifica se il prezzo corrente è nella zona del POI
+            current_price = last_candle_main_tf.close
+            
+            # Logica di ingresso: Manipolazione e Reazione al POI
+            # Questa è la parte cruciale per la frattalità
+            # Dobbiamo cercare una 
+
+
+            # Logica di ingresso: Manipolazione e Reazione al POI
+            # Questa è la parte cruciale per la frattalità
+            # Dobbiamo cercare una manipolazione del POI seguita da una reazione
+            
+            # Verifica se siamo in una zona di POI valida
+            in_poi_zone = False
+            if poi.direzione == "Bullish":
+                # Per POI bullish, il prezzo deve essere nella zona del POI
                 if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
-                    print(trend_htf, poi.direzione)
-                    if (trend_htf == "Bullish" and poi.direzione == "Bullish") or \
-                       (trend_htf == "Bearish" and poi.direzione == "Bearish"):
-                        print(f"[DEBUG] Prezzo nel POI HTF {poi.tipo} {poi.direzione}. Cerco conferma su LTF...")
-                        # Gestione entrata a mercato (conferma o diretta)
-                        new_trade = self.gestisci_entrata_a_mercato(poi, trend_htf)
-                        if new_trade:
-                            self.active_trade = new_trade
-                            signal = new_trade.tipo # BUY o SELL
-                            trade_details = {
-                                "id": new_trade.id,
-                                "coppia": new_trade.coppia,
-                                "tipo": new_trade.tipo,
-                                "prezzo_entrata": new_trade.prezzo_entrata,
-                                "stop_loss": new_trade.stop_loss,
-                                "take_profit_finale": new_trade.take_profit_finale,
-                                "lottaggio": new_trade.lottaggio
-                            }
-                            break # Trovata un\'opportunità, esci dal ciclo POI
+                    in_poi_zone = True
+            elif poi.direzione == "Bearish":
+                # Per POI bearish, il prezzo deve essere nella zona del POI
+                if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
+                    in_poi_zone = True
+            
+            if not in_poi_zone:
+                continue
+            
+            # Verifica la confluenza con il trend del timeframe principale
+            # Questo è un aspetto chiave della frattalità: allineamento multi-timeframe
+            trend_alignment = False
+            if poi.direzione == "Bullish" and self.trend in ["Bullish", "Indefinito"]:
+                trend_alignment = True
+            elif poi.direzione == "Bearish" and self.trend in ["Bearish", "Indefinito"]:
+                trend_alignment = True
+            
+            if not trend_alignment:
+                print(f"[DEBUG] POI scartato per disallineamento trend: POI {poi.direzione} vs Trend {self.trend}")
+                continue
+            
+            # Verifica la presenza di liquidità nella direzione del trade
+            # Questo è fondamentale per la strategia Eclipse
+            has_liquidity_target = False
+            if poi.direzione == "Bullish":
+                # Per un trade BUY, cerchiamo liquidità buy-side (sopra swing highs)
+                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
+                if tf_liquidita.get("buy_side", []):
+                    # Verifica se c'è liquidità sopra il prezzo corrente
+                    for liq_level in tf_liquidita["buy_side"]:
+                        if liq_level > current_price:
+                            has_liquidity_target = True
+                            break
+            elif poi.direzione == "Bearish":
+                # Per un trade SELL, cerchiamo liquidità sell-side (sotto swing lows)
+                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
+                if tf_liquidita.get("sell_side", []):
+                    # Verifica se c'è liquidità sotto il prezzo corrente
+                    for liq_level in tf_liquidita["sell_side"]:
+                        if liq_level < current_price:
+                            has_liquidity_target = True
+                            break
+            
+            if not has_liquidity_target:
+                print(f"[DEBUG] POI scartato per mancanza di liquidità target: {poi.tipo} {poi.direzione}")
+                continue
+            
+            # Se arriviamo qui, abbiamo un setup valido
+            # Generiamo il segnale con logica di ingresso/uscita migliorata
+            
+            if poi.direzione == "Bullish":
+                signal = "BUY"
+                
+                # Calcolo Stop Loss migliorato
+                # SL sotto il POI con un buffer basato sulla volatilità
+                buffer_percentage = 0.0005  # 0.05% buffer
+                stop_loss = poi.prezzo_di_attivazione_bottom * (1 - buffer_percentage)
+                
+                # Calcolo Take Profit basato su liquidità target
+                risk = current_price - stop_loss
+                
+                # Trova il livello di liquidità più vicino come primo target
+                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
+                nearest_liquidity = None
+                for liq_level in tf_liquidita.get("buy_side", []):
+                    if liq_level > current_price:
+                        if nearest_liquidity is None or liq_level < nearest_liquidity:
+                            nearest_liquidity = liq_level
+                
+                if nearest_liquidity:
+                    # TP basato sulla liquidità più vicina
+                    take_profit = nearest_liquidity * 0.999  # Leggermente sotto la liquidità
+                else:
+                    # TP basato sul risk/reward ratio se non c'è liquidità vicina
+                    take_profit = current_price + (risk * self.params.get("risk_reward_ratio", 2.0))
+                
+                print(f"[DEBUG] Segnale BUY generato da POI {poi.tipo} Bullish ({poi.timeframe}) a {current_price:.5f}")
+                print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(take_profit-current_price)/risk:.2f}")
+                break
+                
+            elif poi.direzione == "Bearish":
+                signal = "SELL"
+                
+                # Calcolo Stop Loss migliorato
+                # SL sopra il POI con un buffer basato sulla volatilità
+                buffer_percentage = 0.0005  # 0.05% buffer
+                stop_loss = poi.prezzo_di_attivazione_top * (1 + buffer_percentage)
+                
+                # Calcolo Take Profit basato su liquidità target
+                risk = stop_loss - current_price
+                
+                # Trova il livello di liquidità più vicino come primo target
+                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
+                nearest_liquidity = None
+                for liq_level in tf_liquidita.get("sell_side", []):
+                    if liq_level < current_price:
+                        if nearest_liquidity is None or liq_level > nearest_liquidity:
+                            nearest_liquidity = liq_level
+                
+                if nearest_liquidity:
+                    # TP basato sulla liquidità più vicina
+                    take_profit = nearest_liquidity * 1.001  # Leggermente sopra la liquidità
+                else:
+                    # TP basato sul risk/reward ratio se non c'è liquidità vicina
+                    take_profit = current_price - (risk * self.params.get("risk_reward_ratio", 2.0))
+                
+                print(f"[DEBUG] Segnale SELL generato da POI {poi.tipo} Bearish ({poi.timeframe}) a {current_price:.5f}")
+                print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(current_price-take_profit)/risk:.2f}")
+                break
 
-        print(signal)
-        self.signals = pd.DataFrame([{
-            "time": self.candele[-1].timestamp,
-            "price": current_price,
-            "trend_htf": trend_htf,
-            "signal": signal,
-            "trade_details": trade_details
-        }])
-        return self.signals
+        if signal:
+            new_signal = pd.DataFrame([{
+                "time": last_candle_main_tf.timestamp, 
+                "signal": signal, 
+                "stop_loss": stop_loss, 
+                "take_profit": take_profit
+            }])
+            self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
+        else:
+            print("[DEBUG] Nessun segnale generato in questo ciclo.")
 
     def gestisci_entrata_a_mercato(self, poi_htf: POI, trend_htf: str) -> Optional[Trade]:
         # Metodo 2: Entrata con Conferma (più sicura)
