@@ -4,7 +4,7 @@
 import MetaTrader5 as mt5
 import pandas as pd
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 from datetime import datetime, timedelta
 
@@ -208,56 +208,6 @@ def definisci_range_da_quasimodo(candele: List[Candela], timeframe: str) -> Opti
     return nuovo_range
 
 
-"""def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
-    print("Identifica_Poi timeframe: ", timeframe, "\nCandele: ", len(candele))
-    lista_poi = []
-    for i in range(1, len(candele) - 1):
-        candela_prec = candele[i-1]
-        candela_curr = candele[i]
-        candela_succ = candele[i+1]
-
-        # 1. Order Block Ribassista
-        if candela_prec.close > candela_prec.open and \
-           candela_curr.close < candela_curr.open and \
-           candela_curr.low < candela_prec.low:
-            # Definire prezzo_di_attivazione_top e bottom per OB
-            poi_top = candela_prec.high
-            poi_bottom = candela_prec.low
-            lista_poi.append(POI(tipo="Orderblock", direzione="Bearish", candela_di_riferimento=candela_prec,
-                                 prezzo_di_attivazione_top=poi_top, prezzo_di_attivazione_bottom=poi_bottom,
-                                 key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high, 'low': candela_prec.low, 'close': candela_prec.close},
-                                 timeframe=timeframe))
-
-        # 2. Order Block Rialzista
-        if candela_prec.close < candela_prec.open and \
-           candela_curr.close > candela_curr.open and \
-           candela_curr.high > candela_prec.high:
-            # Definire prezzo_di_attivazione_top e bottom per OB
-            poi_top = candela_prec.high
-            poi_bottom = candela_prec.low
-            lista_poi.append(POI(tipo="Orderblock", direzione="Bullish", candela_di_riferimento=candela_prec,
-                                 prezzo_di_attivazione_top=poi_top, prezzo_di_attivazione_bottom=poi_bottom,
-                                 key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high, 'low': candela_prec.low, 'close': candela_prec.close},
-                                 timeframe=timeframe))
-
-        # 3. Inefficienza / Fair Value Gap (FVG) Rialzista
-        if candela_prec.high < candela_succ.low:
-            poi_top = candela_succ.low
-            poi_bottom = candela_prec.high
-            lista_poi.append(POI(tipo="Inefficiency", direzione="Bullish", candela_di_riferimento=candela_curr,
-                                 prezzo_di_attivazione_top=poi_top, prezzo_di_attivazione_bottom=poi_bottom,
-                                 key_level_ohlc={}, timeframe=timeframe))
-
-        # 4. Inefficienza / Fair Value Gap (FVG) Ribassista
-        if candela_prec.low > candela_succ.high:
-            poi_top = candela_prec.low
-            poi_bottom = candela_succ.high
-            lista_poi.append(POI(tipo="Inefficiency", direzione="Bearish", candela_di_riferimento=candela_curr,
-                                 prezzo_di_attivazione_top=poi_top, prezzo_di_attivazione_bottom=poi_bottom,
-                                 key_level_ohlc={}, timeframe=timeframe))
-
-        # TODO: Implementare logica per Breaker, Hidden Base, Wick
-    return lista_poi"""
 def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
     print("Identifica_Poi timeframe:", timeframe, " | Candele:", len(candele))
     lista_poi = []
@@ -348,91 +298,46 @@ def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
 
     return lista_poi
 
-"""def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], swing_points_low: List[Candela], candele: List[Candela]) -> List[POI]:
+
+def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], swing_points_low: List[Candela], candele: List[Candela]) -> List[POI]:
     poi_validi = []
     for poi in lista_poi:
         has_taken_liquidity = False
         is_mitigated = False
+
         # REGOLA 2: Deve aver "preso" liquidità.
-        if poi.direzione == "Bearish": # OB ribassista deve aver rotto un massimo precedente
-            for swing_high in swing_points_high:
-                if poi.candela_di_riferimento.high > swing_high.high and poi.candela_di_riferimento.timestamp > swing_high.timestamp:
-                    has_taken_liquidity = True
-                    break
-        elif poi.direzione == "Bullish": # OB rialzista deve aver rotto un minimo precedente
+        # Per un OB ribassista, deve aver rotto un minimo precedente (non un massimo come scritto prima)
+        if poi.direzione == "Bearish":
             for swing_low in swing_points_low:
                 if poi.candela_di_riferimento.low < swing_low.low and poi.candela_di_riferimento.timestamp > swing_low.timestamp:
                     has_taken_liquidity = True
                     break
+        # Per un OB rialzista, deve aver rotto un massimo precedente
+        elif poi.direzione == "Bullish":
+            for swing_high in swing_points_high:
+                if poi.candela_di_riferimento.high > swing_high.high and poi.candela_di_riferimento.timestamp > swing_high.timestamp:
+                    has_taken_liquidity = True
+                    break
 
         # REGOLA 3: Non deve essere mitigato.
-        # Controlla se il prezzo è già tornato in quella zona DOPO la formazione del POI.
-        candele_successive = [c for c in candele if c.timestamp > poi.candela_di_riferimento.timestamp]
-        for c_succ in candele_successive:
-            if poi.direzione == "Bearish": # Per POI ribassisti, il prezzo è tornato sopra il bottom
-                if c_succ.high >= poi.prezzo_di_attivazione_bottom and c_succ.low <= poi.prezzo_di_attivazione_top:
+        # Controlla se il prezzo è già tornato in quella zona
+        # Per un POI ribassista (vendita), il prezzo non deve aver superato il top del POI
+        if poi.direzione == "Bearish":
+            for candela in candele:
+                if candela.high >= poi.prezzo_di_attivazione_top and candela.timestamp > poi.candela_di_riferimento.timestamp:
                     is_mitigated = True
                     break
-            elif poi.direzione == "Bullish": # Per POI rialzisti, il prezzo è tornato sotto il top
-                if c_succ.low <= poi.prezzo_di_attivazione_top and c_succ.high >= poi.prezzo_di_attivazione_bottom:
+        # Per un POI rialzista (acquisto), il prezzo non deve aver superato il bottom del POI
+        elif poi.direzione == "Bullish":
+            for candela in candele:
+                if candela.low <= poi.prezzo_di_attivazione_bottom and candela.timestamp > poi.candela_di_riferimento.timestamp:
                     is_mitigated = True
                     break
 
         if has_taken_liquidity and not is_mitigated:
             poi_validi.append(poi)
 
-    print(len(poi_validi))
-    return poi_validi"""
-def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], swing_points_low: List[Candela], candele: List[Candela]) -> List[POI]:
-    poi_validi = []
-
-    for poi in lista_poi:
-        has_taken_liquidity = False
-        is_mitigated = False
-
-        # -------------------------------
-        # (a) Deve aver preso liquidità
-        # -------------------------------
-        if poi.direzione == "Bearish":  # OB ribassista deve rompere un massimo precedente
-            for swing_high in swing_points_high:
-                future_candele = [c for c in candele if c.timestamp >= poi.candela_di_riferimento.timestamp]
-                if any(c.high > swing_high.high for c in future_candele):
-                    has_taken_liquidity = True
-                    break
-
-        elif poi.direzione == "Bullish":  # OB rialzista deve rompere un minimo precedente
-            for swing_low in swing_points_low:
-                future_candele = [c for c in candele if c.timestamp >= poi.candela_di_riferimento.timestamp]
-                if any(c.low < swing_low.low for c in future_candele):
-                    has_taken_liquidity = True
-                    break
-
-        # -------------------------------
-        # (b) Non deve essere mitigato
-        # -------------------------------
-        candele_successive = [c for c in candele if c.timestamp > poi.candela_di_riferimento.timestamp]
-        for c_succ in candele_successive:
-            if poi.direzione == "Bearish":
-                # Consideriamo chiusura dentro la zona come mitigazione
-                if c_succ.close >= poi.prezzo_di_attivazione_bottom and c_succ.close <= poi.prezzo_di_attivazione_top:
-                    is_mitigated = True
-                    break
-
-            elif poi.direzione == "Bullish":
-                if c_succ.close <= poi.prezzo_di_attivazione_top and c_succ.close >= poi.prezzo_di_attivazione_bottom:
-                    is_mitigated = True
-                    break
-
-        # -------------------------------
-        # (c) Regole finali + debug
-        # -------------------------------
-        if has_taken_liquidity and not is_mitigated:
-            poi_validi.append(poi)
-            print(f"[VALIDO] {poi.direzione} {poi.candela_di_riferimento.timestamp} POI a {poi.prezzo_di_attivazione_top:.5f} | Liquidity: OK | Mitigazione: NO")
-        else:
-            print(f"[SCARTATO] {poi.direzione} POI a {poi.prezzo_di_attivazione_top:.5f} | Liquidity: {has_taken_liquidity} | Mitigazione: {is_mitigated}")
-
-    print(f"[DEBUG] POI validi trovati: {len(poi_validi)}")
+    print(f"[DEBUG] Identificati {len(poi_validi)} POI validi dopo il filtraggio.")
     return poi_validi
 
 
