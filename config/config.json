@@ -1,15 +1,15 @@
 {
   "broker": {
     "mode": "demo",
-    "login": 0,
-    "password": "CHANGE_ME",
-    "server_demo": "ICMarkets-Demo",
+    "login": 52461925,
+    "password": "8rq6S3$YS5Ch1n",
+    "server_demo": "ICMarketsEU-Demo",
     "server_real": "ICMarketsSC-Live19",
-    "path_terminal": ""
+    "path_terminal": "C:/Program Files/MetaTrader 5 IC Markets EU/terminal64.exe"
   },
   "trading": {
-    "symbol": "EURUSD",
-    "timeframe": "M5",
+    "symbol": "BTCUSD",
+    "timeframe": "M1",
     "risk_per_trade_pct": 1.0,
     "max_slippage_points": 20,
     "magic_number": 777001,
