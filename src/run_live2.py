@@ -19,18 +19,35 @@ ACCOUNT = broker["login"]
 PASSWORD = broker["password"]
 SERVER = broker["server_demo"] if broker["mode"] == "demo" else broker["server_real"]
 SYMBOL = trading["symbol"]
-TIMEFRAME_MAP = {"M1": mt5.TIMEFRAME_M1, "M5": mt5.TIMEFRAME_M5, "M15": mt5.TIMEFRAME_M15, "H4": mt5.TIMEFRAME_H4}
-TIMEFRAME = TIMEFRAME_MAP.get(trading["timeframe"], mt5.TIMEFRAME_M1)
 
-# Calcolo del lot size basato sul rischio per trade in percentuale
-# Questo è un esempio semplificato, in un bot reale servirebbe:
-# 1. Recuperare il saldo del conto (mt5.account_info().balance)
-# 2. Calcolare il valore di 1 pip per il simbolo (mt5.symbol_info(SYMBOL)._point * mt5.symbol_info(SYMBOL).trade_tick_value)
-# 3. Determinare lo stop loss in pips dalla strategia
-# 4. Calcolare il lot size effettivo
-# Per ora, manteniamo un lot size fisso o usiamo un placeholder
+# Mappa dei timeframe supportati da MetaTrader5
+TIMEFRAME_MAP = {
+    "M1": mt5.TIMEFRAME_M1,
+    "M5": mt5.TIMEFRAME_M5,
+    "M15": mt5.TIMEFRAME_M15,
+    "M30": mt5.TIMEFRAME_M30,
+    "H1": mt5.TIMEFRAME_H1,
+    "H4": mt5.TIMEFRAME_H4,
+    "D1": mt5.TIMEFRAME_D1,
+    "W1": mt5.TIMEFRAME_W1,
+    "MN1": mt5.TIMEFRAME_MN1
+}
+
+# Timeframe principale per l'esecuzione del bot
+MAIN_TIMEFRAME = TIMEFRAME_MAP.get(trading["timeframe"], mt5.TIMEFRAME_M1)
+
+# Timeframe aggiuntivi per l'analisi multi-timeframe (HTF e LTF)
+# Questi dovrebbero essere configurabili nel config.json
+# Per ora, li hardcodiamo per dimostrazione
+ADDITIONAL_TIMEFRAMES = [
+    TIMEFRAME_MAP.get("H4"), # Esempio di Higher Timeframe
+    TIMEFRAME_MAP.get("M5")  # Esempio di Lower Timeframe
+]
+
+# Filtra i timeframe validi e rimuovi duplicati
+ALL_TIMEFRAMES = list(set([MAIN_TIMEFRAME] + [tf for tf in ADDITIONAL_TIMEFRAMES if tf is not None]))
+
 LOT_SIZE = 0.1 # Placeholder, da calcolare dinamicamente in base a risk_per_trade_pct e SL
-
 DELAY = trading.get("poll_seconds", 10)
 
 # -----------------------------
@@ -43,16 +60,22 @@ if not mt5.initialize(login=ACCOUNT, password=PASSWORD, server=SERVER):
 print(f"MT5 inizializzato ({broker["mode"]})!")
 
 # -----------------------------
-# Funzione per leggere OHLCV live
+# Funzione per leggere OHLCV live per più timeframe
 # -----------------------------
-def get_ohlcv(symbol, timeframe, n=200):
-    rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, n)
-    if rates is None:
-        print(f"Errore nel recupero dati OHLCV per {symbol} {timeframe}: {mt5.last_error()}")
-        return None
-    df = pd.DataFrame(rates)
-    df["time"] = pd.to_datetime(df["time"], unit=\'s\')
-    return df
+def get_ohlcv_multi_timeframe(symbol, timeframes: list, n=200):
+    data = {}
+    for tf_mt5 in timeframes:
+        # Trova il nome stringa del timeframe dalla mappa per il logging
+        tf_name = next((name for name, value in TIMEFRAME_MAP.items() if value == tf_mt5), str(tf_mt5))
+        rates = mt5.copy_rates_from_pos(symbol, tf_mt5, 0, n)
+        if rates is None:
+            print(f"Errore nel recupero dati OHLCV per {symbol} {tf_name}: {mt5.last_error()}")
+            data[tf_name] = pd.DataFrame() # Ritorna un DataFrame vuoto in caso di errore
+            continue
+        df = pd.DataFrame(rates)
+        df["time"] = pd.to_datetime(df["time"], unit=\'s\')
+        data[tf_name] = df
+    return data
 
 # -----------------------------
 # Funzione per inviare ordine
@@ -122,14 +145,19 @@ def seconds_to_next_candle(timeframe: str):
 # -----------------------------
 while True:
     try:
-        df = get_ohlcv(SYMBOL, TIMEFRAME)
-        if df is None or df.empty:
-            print("Errore dati OHLCV o DataFrame vuoto. Riprovo...")
+        # Recupera i dati OHLCV per tutti i timeframe necessari
+        ohlcv_data = get_ohlcv_multi_timeframe(SYMBOL, ALL_TIMEFRAMES)
+
+        # Assicurati che il timeframe principale abbia dati validi
+        main_tf_name = next((name for name, value in TIMEFRAME_MAP.items() if value == MAIN_TIMEFRAME), str(MAIN_TIMEFRAME))
+        if main_tf_name not in ohlcv_data or ohlcv_data[main_tf_name].empty:
+            print(f"Errore: Dati OHLCV non disponibili per il timeframe principale {main_tf_name}. Riprovo...")
             time.sleep(DELAY)
             continue
 
-        # Inizializza la strategia con i parametri e i dati OHLCV
-        strat = TradingStrategy(SYMBOL, TIMEFRAME, df, params=strategy_params)
+        # Inizializza la strategia con i parametri e i dati OHLCV per tutti i timeframe
+        # La classe TradingStrategy dovrà essere aggiornata per accettare multi-timeframe data
+        strat = TradingStrategy(SYMBOL, MAIN_TIMEFRAME, ohlcv_data, params=strategy_params)
         strat.generate_signals()
         
         # Recupera il segnale dall'ultima riga del DataFrame dei segnali
@@ -149,3 +177,5 @@ while True:
         print(f"Errore nel loop principale: {e}")
 
     time.sleep(DELAY)
+
+
