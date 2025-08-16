@@ -281,8 +281,8 @@ def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
-                                    'low': candela_prec.low, 'close': candela_prec.close},
+                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
+                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
                     timeframe=timeframe
                 ))
 
@@ -300,8 +300,8 @@ def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
-                                    'low': candela_prec.low, 'close': candela_prec.close},
+                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
+                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
                     timeframe=timeframe
                 ))
 
@@ -347,7 +347,6 @@ def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
         print(f"  {poi.tipo} {poi.direzione} | Top={poi.prezzo_di_attivazione_top} | Bottom={poi.prezzo_di_attivazione_bottom} | Ref={poi.candela_di_riferimento.timestamp}")
 
     return lista_poi
-
 
 """def filtra_poi_validi(lista_poi: List[POI], swing_points_high: List[Candela], swing_points_low: List[Candela], candele: List[Candela]) -> List[POI]:
     poi_validi = []
