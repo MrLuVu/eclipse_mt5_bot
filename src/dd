@@ -1,24 +1,83 @@
-Identifica_Poi timeframe: M5  | Candele: 200  | Swing Points: 95
-[DEBUG] Identificati 80 POI su timeframe M5
-  Orderblock Bullish | Top=117828.75000 | Bottom=117769.75000 | Ref=2025-08-16 17:35:00
-  Orderblock Bearish | Top=117855.88000 | Bottom=117835.38000 | Ref=2025-08-16 18:25:00
-  Orderblock Bearish | Top=117882.88000 | Bottom=117847.00000 | Ref=2025-08-16 19:15:00
-[DEBUG] POI validi dopo filtraggio: 1/80
+vvio identificazione Range su timeframe M1...
+[DEBUG] Identificati 91 swing points su M1
+QM Ribassista (Strong High) trovato a: 118054.88 in data 2025-08-17 10:32:00
+QM Rialzista (Strong Low) trovato a: 117915.75 in data 2025-08-17 10:05:00
+Range valido definito su M1: Low a 117915.75, High a 118054.88
+[DEBUG] Range di Mercato (M1): Strong High=118054.88000, Strong Low=117915.75000
 Identifica_Poi timeframe: H4  | Candele: 200  | Swing Points: 82
 [DEBUG] Identificati 65 POI su timeframe H4
   Orderblock Bullish | Top=117810.10000 | Bottom=116782.86000 | Ref=2025-07-15 08:00:00
   Orderblock Bearish | Top=117213.64000 | Bottom=116326.61000 | Ref=2025-07-15 12:00:00
   Orderblock Bullish | Top=117555.38000 | Bottom=116548.13000 | Ref=2025-07-15 20:00:00
 [DEBUG] POI validi dopo filtraggio: 0/65
+Identifica_Poi timeframe: M5  | Candele: 200  | Swing Points: 95
+[DEBUG] Identificati 81 POI su timeframe M5
+  Orderblock Bearish | Top=117855.88000 | Bottom=117835.38000 | Ref=2025-08-16 18:25:00
+  Orderblock Bearish | Top=117882.88000 | Bottom=117847.00000 | Ref=2025-08-16 19:15:00
+  Orderblock Bullish | Top=117884.25000 | Bottom=117825.50000 | Ref=2025-08-16 19:20:00
+[DEBUG] POI validi dopo filtraggio: 4/81
 Identifica_Poi timeframe: M1  | Candele: 200  | Swing Points: 91
-[DEBUG] Identificati 53 POI su timeframe M1
-  Orderblock Bearish | Top=117792.38000 | Bottom=117780.63000 | Ref=2025-08-17 07:04:00
-  Orderblock Bullish | Top=117791.63000 | Bottom=117768.25000 | Ref=2025-08-17 07:05:00
-  Orderblock Bearish | Top=117812.25000 | Bottom=117791.75000 | Ref=2025-08-17 07:07:00
-[DEBUG] POI validi dopo filtraggio: 4/53
-[DEBUG] Totale POI validi identificati su tutti i timeframe: 5
-[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 303.00 min, max 250 min)
-[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 177.00 min, max 50 min)
-[DEBUG] POI scartato per anzianità: Inefficiency Bearish su M1 (vecchio di 53.00 min, max 50 min)
+[DEBUG] Identificati 51 POI su timeframe M1
+  Orderblock Bullish | Top=117846.75000 | Bottom=117837.75000 | Ref=2025-08-17 07:26:00
+  Orderblock Bearish | Top=117865.75000 | Bottom=117846.00000 | Ref=2025-08-17 07:33:00
+  Orderblock Bearish | Top=117866.75000 | Bottom=117859.75000 | Ref=2025-08-17 07:37:00
+[DEBUG] POI validi dopo filtraggio: 6/51
+[DEBUG] Totale POI validi identificati su tutti i timeframe: 10
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 390.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 325.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 199.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 152.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Inefficiency Bearish su M1 (vecchio di 75.00 min, max 50 min)
 [DEBUG] Nessun segnale generato in questo ciclo.
-Nessun segnale. Candela chiuderà tra 0m 20s.
+Nessun segnale. Candela chiuderà tra 0m 18s.
+[DEBUG] Analisi su timeframe principale: M1 con 200 candele
+[DEBUG] Identificati 82 swing points su H4
+[DEBUG] Liquidità identificata - Buy Side: 42, Sell Side: 40)
+[DEBUG] Identificati 44 Equal Highs e 47 Equal Lows su H4
+[DEBUG] Identificati 49 Trendline Buy Side e 60 Trendline Sell Side su H4
+[DEBUG] Identificata liquidità sessione asiatica su H4: High=124561.75000, Low=111880.50000
+[DEBUG] Identificati 95 swing points su M5
+[DEBUG] Liquidità identificata - Buy Side: 48, Sell Side: 47)
+[DEBUG] Identificati 40 Equal Highs e 40 Equal Lows su M5
+[DEBUG] Identificati 44 Trendline Buy Side e 48 Trendline Sell Side su M5
+[DEBUG] Identificata liquidità sessione asiatica su M5: High=117793.63000, Low=117262.50000
+[DEBUG] Identificati 91 swing points su M1
+[DEBUG] Liquidità identificata - Buy Side: 49, Sell Side: 42)
+[DEBUG] Identificati 23 Equal Highs e 21 Equal Lows su M1
+[DEBUG] Identificati 53 Trendline Buy Side e 71 Trendline Sell Side su M1
+[DEBUG] Nessuna candela trovata per la sessione asiatica su M1
+[DEBUG] Trend: Indefinito, BOS High: None, BOS Low: None
+[DEBUG] Trend attuale (M1): Indefinito
+Avvio identificazione Range su timeframe M1...
+[DEBUG] Identificati 91 swing points su M1
+QM Ribassista (Strong High) trovato a: 118054.88 in data 2025-08-17 10:32:00
+QM Rialzista (Strong Low) trovato a: 117915.75 in data 2025-08-17 10:05:00
+Range valido definito su M1: Low a 117915.75, High a 118054.88
+[DEBUG] Range di Mercato (M1): Strong High=118054.88000, Strong Low=117915.75000
+Identifica_Poi timeframe: H4  | Candele: 200  | Swing Points: 82
+[DEBUG] Identificati 65 POI su timeframe H4
+  Orderblock Bullish | Top=117810.10000 | Bottom=116782.86000 | Ref=2025-07-15 08:00:00
+  Orderblock Bearish | Top=117213.64000 | Bottom=116326.61000 | Ref=2025-07-15 12:00:00
+  Orderblock Bullish | Top=117555.38000 | Bottom=116548.13000 | Ref=2025-07-15 20:00:00
+[DEBUG] POI validi dopo filtraggio: 0/65
+Identifica_Poi timeframe: M5  | Candele: 200  | Swing Points: 95
+[DEBUG] Identificati 81 POI su timeframe M5
+  Orderblock Bearish | Top=117855.88000 | Bottom=117835.38000 | Ref=2025-08-16 18:25:00
+  Orderblock Bearish | Top=117882.88000 | Bottom=117847.00000 | Ref=2025-08-16 19:15:00
+  Orderblock Bullish | Top=117884.25000 | Bottom=117825.50000 | Ref=2025-08-16 19:20:00
+[DEBUG] POI validi dopo filtraggio: 4/81
+Identifica_Poi timeframe: M1  | Candele: 200  | Swing Points: 91
+[DEBUG] Identificati 51 POI su timeframe M1
+  Orderblock Bullish | Top=117846.75000 | Bottom=117837.75000 | Ref=2025-08-17 07:26:00
+  Orderblock Bearish | Top=117865.75000 | Bottom=117846.00000 | Ref=2025-08-17 07:33:00
+  Orderblock Bearish | Top=117866.75000 | Bottom=117859.75000 | Ref=2025-08-17 07:37:00
+[DEBUG] POI validi dopo filtraggio: 6/51
+[DEBUG] Totale POI validi identificati su tutti i timeframe: 10
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 390.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 325.00 min, max 250 min)
+[DEBUG] Segnale SELL generato da POI Orderblock Bearish (M5) a 118042.25000
+[DEBUG] SL: 118172.68681, TP: 118159.04100, Risk: 130.43681, RR: -0.90
+C:\Users\luigi\Desktop\eclipse_mt5_bot\src\strategy2.py:835: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
+Errore ordine: Invalid stops (10016)
+Traceback (most recent call last):
