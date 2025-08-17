@@ -218,8 +218,7 @@ def identifica_liquidita_swing_points(swing_points: List[SwingPoint]) -> Dict[st
             # Sell Side Liquidity sotto il swing low
             liquidita["sell_side"].append(sp.candela.low)
     
-    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})
-")
+    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})")
     return liquidita
 
 def trova_ultimo_low_prima_di(timestamp, lista_lows):
@@ -441,8 +440,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
-                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
+                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
+                                    'low': candela_prec.low, 'close': candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -461,8 +460,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
-                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
+                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
+                                    'low': candela_prec.low, 'close': candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -866,4 +865,3 @@ class TradingStrategy:
             self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
         else:
             print("[DEBUG] Nessun segnale generato in questo ciclo.")
-
