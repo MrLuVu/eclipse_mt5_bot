@@ -1,27 +1,181 @@
 [DEBUG] Analisi su timeframe principale: M1 con 300 candele
-[DEBUG] Identificati 140 swing points su M5
-[DEBUG] Liquidità identificata - Buy Side: 72, Sell Side: 68
-[DEBUG] Identificati 48 Equal Highs e 55 Equal Lows su M5
-[DEBUG] Identificati 61 Trendline Buy Side e 75 Trendline Sell Side su M5
-[DEBUG] Identificata liquidità sessione asiatica su M5: High=117793.63000, Low=117262.50000
 [DEBUG] Identificati 125 swing points su M1
-[DEBUG] Liquidità identificata - Buy Side: 59, Sell Side: 66
-[DEBUG] Identificati 24 Equal Highs e 24 Equal Lows su M1
-[DEBUG] Identificati 90 Trendline Buy Side e 97 Trendline Sell Side su M1
+[DEBUG] Liquidità identificata - Buy Side: 58, Sell Side: 67)
+[DEBUG] Identificati 24 Equal Highs e 23 Equal Lows su M1
+[DEBUG] Identificati 91 Trendline Buy Side e 96 Trendline Sell Side su M1
 [DEBUG] Nessuna candela trovata per la sessione asiatica su M1
-[DEBUG] Identificati 122 swing points su H4
-[DEBUG] Liquidità identificata - Buy Side: 60, Sell Side: 62
+[DEBUG] Identificati 123 swing points su H4
+[DEBUG] Liquidità identificata - Buy Side: 61, Sell Side: 62)
 [DEBUG] Identificati 60 Equal Highs e 70 Equal Lows su H4
-[DEBUG] Identificati 80 Trendline Buy Side e 90 Trendline Sell Side su H4
+[DEBUG] Identificati 79 Trendline Buy Side e 90 Trendline Sell Side su H4
 [DEBUG] Identificata liquidità sessione asiatica su H4: High=124561.75000, Low=105105.68000
-[DEBUG] Trend: Bearish, BOS High: None, BOS Low: SwingPoint(candela=Candela(timestamp=Timestamp('2025-08-17 15:56:00'), open=118239.38, high=118241.38, low=118177.63, close=118214.5), tipo='LOW', timeframe='M1', confermato=True, liquidita_presa=False)
+[DEBUG] Identificati 140 swing points su M5
+[DEBUG] Liquidità identificata - Buy Side: 72, Sell Side: 68)
+[DEBUG] Identificati 48 Equal Highs e 55 Equal Lows su M5
+[DEBUG] Identificati 64 Trendline Buy Side e 74 Trendline Sell Side su M5
+[DEBUG] Identificata liquidità sessione asiatica su M5: High=117793.63000, Low=117262.50000
+[DEBUG] Trend: Bearish, BOS High: None, BOS Low: SwingPoint(candela=Candela(timestamp=Timestamp('2025-08-17 16:09:00'), open=118182.13, high=118184.38, low=118162.13, close=118176.88), tipo='LOW', timeframe='M1', confermato=True, liquidita_presa=False)
 [DEBUG] Trend attuale (M1): Bearish
 Avvio identificazione Range su timeframe M1...
 [DEBUG] Identificati 125 swing points su M1
-QM Ribassista (Strong High) trovato a: 118325.0 in data 2025-08-17 15:45:00
+QM Ribassista (Strong High) trovato a: 118243.5 in data 2025-08-17 16:00:00
 QM Rialzista (Strong Low) trovato a: 118260.0 in data 2025-08-17 15:43:00
-Range valido definito su M1: Low a 118260.0, High a 118325.0
-[DEBUG] Range di Mercato (M1): Strong High=118325.00000, Strong Low=118260.00000
+Range valido definito su M1: Low a 118260.0, High a 118243.5
+[DEBUG] Range di Mercato (M1): Strong High=118243.50000, Strong Low=118260.00000
+Identifica_Poi timeframe: M1  | Candele: 300  | Swing Points: 125
+[DEBUG] Identificati 92 POI su timeframe M1
+  Orderblock Bearish | Top=118037.00000 | Bottom=118027.50000 | Ref=2025-08-17 11:12:00
+  Orderblock Bullish | Top=118021.50000 | Bottom=118014.50000 | Ref=2025-08-17 11:14:00
+  Orderblock Bearish | Top=118024.50000 | Bottom=118016.25000 | Ref=2025-08-17 11:19:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:12:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:19:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:33:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:39:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:41:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:46:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:48:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:49:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:52:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:00:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:02:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:08:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:10:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:12:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:14:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:15:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:18:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:35:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:37:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:41:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:44:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:48:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:54:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:56:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:01:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:03:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:05:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:10:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:11:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:12:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:15:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:16:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:20:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:22:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:32:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:33:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:34:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:36:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:38:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:41:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:45:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:48:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:49:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:51:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:52:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:56:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:10:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:13:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:15:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:17:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:22:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:26:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:29:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:35:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:37:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:42:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:47:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:03:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:08:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:14:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:22:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:25:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:28:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:29:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:30:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:38:00
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:40:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:43:00
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:58:00
+[DEBUG] POI validi dopo filtraggio: 23/92
+Identifica_Poi timeframe: H4  | Candele: 300  | Swing Points: 123
+[DEBUG] Identificati 87 POI su timeframe H4
+  Orderblock Bullish | Top=107522.27000 | Bottom=107320.17000 | Ref=2025-06-29 04:00:00
+  Orderblock Bearish | Top=108220.46000 | Bottom=107665.45000 | Ref=2025-06-29 12:00:00
+  Orderblock Bullish | Top=107766.68000 | Bottom=107439.60000 | Ref=2025-06-29 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-06-29 04:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-06-29 12:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-06-29 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-03 04:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-03 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-05 20:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-06 00:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-06 20:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-07 04:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-09 00:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-10 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-11 08:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-12 00:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-12 08:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-12 20:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-14 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-14 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-15 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-15 12:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-15 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-16 04:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-16 12:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-16 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-17 12:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-18 04:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-18 12:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-19 00:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-19 12:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-20 12:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-20 16:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-21 00:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-21 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-22 00:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-22 04:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-22 16:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-23 16:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-24 00:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-24 12:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-24 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-25 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-26 16:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-26 20:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-27 04:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-27 08:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-27 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-29 00:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-29 08:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-29 20:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-30 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-30 16:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-30 20:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-31 12:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-01 04:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-01 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-01 12:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-03 16:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-04 08:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-04 12:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-05 00:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-07 16:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-08 00:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-09 12:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-10 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-10 16:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-10 20:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-11 16:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-12 04:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-12 08:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-12 20:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-13 04:00:00
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-14 20:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-16 04:00:00
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-16 16:00:00
+[DEBUG] POI validi dopo filtraggio: 14/87
 Identifica_Poi timeframe: M5  | Candele: 300  | Swing Points: 140
 [DEBUG] Identificati 113 POI su timeframe M5
   Orderblock Bullish | Top=117527.88000 | Bottom=117506.88000 | Ref=2025-08-16 15:05:00
@@ -90,21 +244,12 @@ Identifica_Poi timeframe: M5  | Candele: 300  | Swing Points: 140
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 03:50:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 04:05:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 04:35:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 04:40:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 04:50:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 04:55:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 05:00:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 05:10:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 05:25:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 05:30:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 05:40:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 05:45:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 06:05:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 06:20:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 06:50:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 06:55:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 07:10:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 07:35:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 07:55:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 08:05:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 08:15:00
@@ -117,15 +262,11 @@ Identifica_Poi timeframe: M5  | Candele: 300  | Swing Points: 140
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 09:40:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 09:50:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 09:55:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 10:00:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 10:10:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 10:20:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 10:30:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 10:50:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:00:00
-[DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:10:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:55:00
-[DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:20:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:35:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:50:00
 [DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:10:00
@@ -133,203 +274,67 @@ Identifica_Poi timeframe: M5  | Candele: 300  | Swing Points: 140
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:45:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:15:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:35:00
-[DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:45:00
-[DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:55:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:05:00
 [DEBUG] POI scartato: Orderblock Bullish su M5 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:25:00
-[DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:30:00
-[DEBUG] POI validi dopo filtraggio: 2/113
-Identifica_Poi timeframe: M1  | Candele: 300  | Swing Points: 125
-[DEBUG] Identificati 90 POI su timeframe M1
-  Inefficiency Bullish | Top=118099.13000 | Bottom=118080.63000 | Ref=2025-08-17 10:59:00
-  Orderblock Bearish | Top=118115.63000 | Bottom=118099.13000 | Ref=2025-08-17 11:00:00
-  Orderblock Bullish | Top=118115.63000 | Bottom=118093.75000 | Ref=2025-08-17 11:01:00
-[DEBUG] POI scartato: Inefficiency Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 10:59:00       
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:00:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:01:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:04:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:12:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:14:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:19:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:20:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:25:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:30:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:33:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:34:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:39:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:41:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:46:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 11:48:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:49:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 11:52:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:00:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:02:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:08:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:10:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:12:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:14:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:15:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:18:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:21:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:24:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:35:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:37:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:41:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:44:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:48:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 12:54:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 12:56:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:01:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:03:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:05:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:10:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:11:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:12:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:15:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:16:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:20:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:22:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:32:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:33:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:34:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:36:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:38:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:41:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:45:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:48:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:49:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:51:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:52:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 13:56:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 13:59:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:03:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:10:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:13:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:15:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:17:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:22:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:26:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:29:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:31:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:35:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:37:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:42:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 14:47:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 14:52:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:00:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:03:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:08:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:14:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:22:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:23:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:25:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:27:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:28:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:29:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:30:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:38:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:40:00
-[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 15:43:00
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-17 15:51:00
-[DEBUG] POI validi dopo filtraggio: 3/90
-Identifica_Poi timeframe: H4  | Candele: 300  | Swing Points: 122
-[DEBUG] Identificati 87 POI su timeframe H4
-  Orderblock Bullish | Top=107522.27000 | Bottom=107320.17000 | Ref=2025-06-29 04:00:00
-  Orderblock Bearish | Top=108220.46000 | Bottom=107665.45000 | Ref=2025-06-29 12:00:00
-  Orderblock Bullish | Top=107766.68000 | Bottom=107439.60000 | Ref=2025-06-29 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-06-29 04:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-06-29 12:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-06-29 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-02 00:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-02 12:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-03 04:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-03 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-05 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-06 00:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-06 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-07 04:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-08 04:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-09 00:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-09 04:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-10 08:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-10 12:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-11 08:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-12 00:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-12 08:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-12 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-14 08:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-14 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-15 08:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-15 12:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-15 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-16 04:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-16 12:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-16 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-17 12:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-18 04:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-18 12:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-19 00:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-19 12:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-20 12:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-20 16:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-21 00:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-21 08:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-22 00:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-22 04:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-22 16:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-23 16:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-24 00:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-24 12:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-24 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-25 08:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-26 16:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-26 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-27 04:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-27 08:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-27 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-29 00:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-29 08:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-29 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-30 08:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-30 16:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-07-30 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-07-31 12:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-01 04:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-01 08:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-01 12:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-02 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-03 16:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-04 08:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-04 12:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-05 00:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-06 04:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-06 12:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-07 04:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-07 16:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-08 00:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-09 04:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-09 12:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-10 08:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-10 16:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-10 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-11 16:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-12 04:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-12 08:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-12 20:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-13 04:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-14 00:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-14 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-15 08:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-15 20:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-16 04:00:00
-[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: mitigato (prezzo tornato sopra il top)) - Ref=2025-08-16 16:00:00
-[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: mitigato (prezzo tornato sotto il bottom)) - Ref=2025-08-17 00:00:00
-[DEBUG] POI validi dopo filtraggio: 0/87
-[DEBUG] Totale POI validi identificati su tutti i timeframe: 5
-[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 702.00 min, max 250 min)
-[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 637.00 min, max 250 min)
-[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 274.00 min, max 50 min)
-[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: Prezzo corrente 118226.00000 non nella zona del POI [118387.50000-118406.13000])
-[DEBUG] POI scartato: Inefficiency Bearish su M1 (Motivo: Prezzo corrente 118226.00000 non nella zona del POI [118304.75000-118309.25000])
-[DEBUG] Nessun segnale generato in questo ciclo.
-Nessun segnale. Candela chiuderà tra 0m 57s.
+[DEBUG] POI validi dopo filtraggio: 18/113
+[DEBUG] Totale POI validi identificati su tutti i timeframe: 55
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 67211.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 66491.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 58331.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 56891.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 54971.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 21371.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 16571.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 16091.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 15131.00 min, max 12000 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su H4 (vecchio di 12251.00 min, max 12000 min)
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [122353.50000-123908.75000])
+[DEBUG] POI scartato: Orderblock Bearish su H4 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118745.88000-118972.75000])
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [117354.50000-117930.13000])
+[DEBUG] POI scartato: Orderblock Bullish su H4 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [117348.50000-117687.13000])
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 716.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 691.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 661.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 651.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 641.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 626.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 606.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 591.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 556.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 541.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 516.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 371.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 341.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 301.00 min, max 250 min)
+[DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118383.13000-118494.75000])
+[DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118388.38000-118399.38000])
+[DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118356.50000-118375.13000])
+[DEBUG] POI scartato: Orderblock Bearish su M5 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118297.50000-118333.38000])
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 297.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 291.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 288.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 286.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 281.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 277.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 230.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 227.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 132.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 128.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 100.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 79.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 71.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 54.00 min, max 50 min)
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118319.38000-118332.38000])
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118322.88000-118329.38000])
+[DEBUG] POI scartato: Inefficiency Bearish su M1 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118304.75000-118309.25000])
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118294.75000-118296.75000])
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118214.00000-118226.00000])
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118211.50000-118230.50000])
+[DEBUG] POI scartato: Orderblock Bullish su M1 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118182.50000-118199.50000])
+[DEBUG] POI scartato: Orderblock Bearish su M1 (Motivo: Prezzo corrente 118176.38000 non nella zona del POI [118204.38000-118225.88000])
+[DEBUG] Segnale SELL generato da POI Orderblock Bearish (M1) a 118176.38000
+[DEBUG] SL: 118244.97294, TP: 118172.38000, Risk: 68.59294, RR: 0.06
+C:\Users\luigi\Desktop\eclipse_mt5_bot\src\strategy2.py:887: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
+Errore nel loop principale: 'NoneType' object has no attribute 'retcode'
+Traceback (most recent call last):
