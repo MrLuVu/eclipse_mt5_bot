@@ -1,0 +1,24 @@
+Identifica_Poi timeframe: M5  | Candele: 200  | Swing Points: 95
+[DEBUG] Identificati 80 POI su timeframe M5
+  Orderblock Bullish | Top=117828.75000 | Bottom=117769.75000 | Ref=2025-08-16 17:35:00
+  Orderblock Bearish | Top=117855.88000 | Bottom=117835.38000 | Ref=2025-08-16 18:25:00
+  Orderblock Bearish | Top=117882.88000 | Bottom=117847.00000 | Ref=2025-08-16 19:15:00
+[DEBUG] POI validi dopo filtraggio: 1/80
+Identifica_Poi timeframe: H4  | Candele: 200  | Swing Points: 82
+[DEBUG] Identificati 65 POI su timeframe H4
+  Orderblock Bullish | Top=117810.10000 | Bottom=116782.86000 | Ref=2025-07-15 08:00:00
+  Orderblock Bearish | Top=117213.64000 | Bottom=116326.61000 | Ref=2025-07-15 12:00:00
+  Orderblock Bullish | Top=117555.38000 | Bottom=116548.13000 | Ref=2025-07-15 20:00:00
+[DEBUG] POI validi dopo filtraggio: 0/65
+Identifica_Poi timeframe: M1  | Candele: 200  | Swing Points: 91
+[DEBUG] Identificati 53 POI su timeframe M1
+  Orderblock Bearish | Top=117792.38000 | Bottom=117780.63000 | Ref=2025-08-17 07:04:00
+  Orderblock Bullish | Top=117791.63000 | Bottom=117768.25000 | Ref=2025-08-17 07:05:00
+  Orderblock Bearish | Top=117812.25000 | Bottom=117791.75000 | Ref=2025-08-17 07:07:00
+[DEBUG] POI validi dopo filtraggio: 4/53
+[DEBUG] Totale POI validi identificati su tutti i timeframe: 5
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 303.00 min, max 250 min)
+[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 177.00 min, max 50 min)
+[DEBUG] POI scartato per anzianità: Inefficiency Bearish su M1 (vecchio di 53.00 min, max 50 min)
+[DEBUG] Nessun segnale generato in questo ciclo.
+Nessun segnale. Candela chiuderà tra 0m 20s.
