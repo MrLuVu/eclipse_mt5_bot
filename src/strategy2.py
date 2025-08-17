@@ -441,8 +441,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
-                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
+                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
+                                    'low': candela_prec.low, 'close': candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -461,8 +461,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
-                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
+                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
+                                    'low': candela_prec.low, 'close': candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -525,16 +525,22 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], cand
         # REGOLA 2: Deve aver "preso" liquidità
         # Verifica se il POI è associato a un movimento che ha rotto liquidità
         # Ora considera tutte le forme di liquidità
+        # Aggiungo un lookback per la liquidità presa, non solo la candela di riferimento
+        # Estendo il lookback per la liquidità presa per timeframe più alti
+        lookback_candles_for_liquidity = 10 # Guarda le ultime 10 candele prima e dopo il POI
+        poi_index = candele.index(poi.candela_di_riferimento)
+        relevant_candles = candele[max(0, poi_index - lookback_candles_for_liquidity) : min(len(candele), poi_index + lookback_candles_for_liquidity + 1)]
+
         if poi.direzione == "Bearish": # Per un POI bearish, cerchiamo liquidità buy-side presa
             for liq_level in all_liquidita.get("buy_side", []):
-                # Se il prezzo ha superato un livello di liquidità buy-side
-                if poi.candela_di_riferimento.high > liq_level:
+                # Se il prezzo ha superato un livello di liquidità buy-side in una delle candele rilevanti
+                if any(c.high > liq_level for c in relevant_candles):
                     has_taken_liquidity = True
                     break
         elif poi.direzione == "Bullish": # Per un POI bullish, cerchiamo liquidità sell-side presa
             for liq_level in all_liquidita.get("sell_side", []):
-                # Se il prezzo ha superato un livello di liquidità sell-side
-                if poi.candela_di_riferimento.low < liq_level:
+                # Se il prezzo ha superato un livello di liquidità sell-side in una delle candele rilevanti
+                if any(c.low < liq_level for c in relevant_candles):
                     has_taken_liquidity = True
                     break
         
@@ -543,20 +549,27 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], cand
 
         # REGOLA 3: Non deve essere mitigato
         # Verifica se il prezzo è tornato nella zona del POI dopo la sua formazione
-        for candela in candele:
-            if candela.timestamp <= poi.candela_di_riferimento.timestamp:
-                continue
-                
+        # Rilasso la condizione di mitigazione: un POI è mitigato solo se il prezzo chiude
+        # completamente oltre la sua zona, non solo se la tocca.
+        
+        # Candele successive al POI
+        subsequent_candles = candele[candele.index(poi.candela_di_riferimento) + 1:]
+
+        for candela in subsequent_candles:
             if poi.direzione == "Bearish":
                 # Per un POI bearish, è mitigato se il prezzo torna sopra il top
-                if candela.high >= poi.prezzo_di_attivazione_top:
+                # Consideriamo mitigato se il close della candela successiva è >= top del POI
+                # Aggiungo una piccola tolleranza per evitare falsi positivi su mitigazione
+                if candela.close >= poi.prezzo_di_attivazione_top * 1.0001: # 0.01% di tolleranza
                     is_mitigated = True
                     poi.e_mitigato = True
                     reason_discarded.append("mitigato (prezzo tornato sopra il top)")
                     break
             elif poi.direzione == "Bullish":
                 # Per un POI bullish, è mitigato se il prezzo torna sotto il bottom
-                if candela.low <= poi.prezzo_di_attivazione_bottom:
+                # Consideriamo mitigato se il close della candela successiva è <= bottom del POI
+                # Aggiungo una piccola tolleranza per evitare falsi positivi su mitigazione
+                if candela.close <= poi.prezzo_di_attivazione_bottom * 0.9999: # 0.01% di tolleranza
                     is_mitigated = True
                     poi.e_mitigato = True
                     reason_discarded.append("mitigato (prezzo tornato sotto il bottom)")
@@ -566,7 +579,7 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], cand
         if has_taken_liquidity and not is_mitigated:
             poi_validi.append(poi)
         else:
-            print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: {', '.join(reason_discarded)}) - Ref={poi.candela_di_riferimento.timestamp}")
+            print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: {", ".join(reason_discarded)}) - Ref={poi.candela_di_riferimento.timestamp}")
 
     print(f"[DEBUG] POI validi dopo filtraggio: {len(poi_validi)}/{len(lista_poi)}")
     return poi_validi
@@ -763,9 +776,9 @@ class TradingStrategy:
             elif poi.direzione == "Bearish":
                 # Per un trade SELL, cerchiamo liquidità sell-side (sotto swing lows)
                 tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                if tf_liquidita.get("sell_side", []):
+                if tf_liquidita.get("sell_side", []): # Corretto da sell_level a sell_side
                     # Verifica se c\"è liquidità sotto il prezzo corrente
-                    for liq_level in tf_liquidita["sell_level"]:
+                    for liq_level in tf_liquidita["sell_side"]:
                         if liq_level < current_price:
                             has_liquidity_target = True
                             break
