@@ -3,6 +3,7 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
 from datetime import datetime, timedelta
+import MetaTrader5 as mt5
 
 
 # -----------------------------------------------------------------------------
@@ -610,8 +611,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
-                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
+                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
+                                    'low': candela_prec.low, 'close': candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -630,8 +631,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
-                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
+                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
+                                    'low': candela_prec.low, 'close': candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -871,6 +872,7 @@ SPREAD = 0.0001 # Esempio di spread
 # -----------------------------------------------------------------------------
 class TradingStrategy:
     def __init__(self, symbol: str, main_timeframe: str, ohlcv_data: Dict[str, pd.DataFrame], params: dict):
+        print("Main timeframe: ",main_timeframe)
         self.symbol = symbol
         self.main_timeframe = main_timeframe
         self.ohlcv_data = ohlcv_data
@@ -882,6 +884,7 @@ class TradingStrategy:
             tf: self._df_to_candele(df) 
             for tf, df in ohlcv_data.items()
         }
+        #print("Candele_multi_frame: ",self.candele_multi_timeframe)
         
         # Stato della strategia
         self.trend = "Indefinito"
@@ -914,6 +917,7 @@ class TradingStrategy:
     def generate_signals(self):
         # Ottieni le candele per il timeframe principale
         main_candele = self.candele_multi_timeframe.get(self.main_timeframe)
+        print("Self main_timeframe: ",self.main_timeframe)
         if not main_candele:
             print(f"[ERRORE] Dati non disponibili per il timeframe principale: {self.main_timeframe}")
             return
@@ -1314,4 +1318,3 @@ if __name__ == "__main__":
             if strategy.active_trade.stato == "Chiuso":
                 break
         print(f"Stato finale trade simulato: {strategy.active_trade.stato}")
-
