@@ -52,7 +52,6 @@ ADDITIONAL_TIMEFRAMES_STR = [
 # Filtra i timeframe validi e rimuovi duplicati
 ALL_TIMEFRAMES_STR = list(set([MAIN_TIMEFRAME_STR] + [tf for tf in ADDITIONAL_TIMEFRAMES_STR if tf is not None]))
 
-LOT_SIZE = 0.1 # Placeholder, da calcolare dinamicamente in base a risk_per_trade_pct e SL
 DELAY = trading.get("poll_seconds", 10)
 
 # -----------------------------
@@ -124,14 +123,14 @@ def send_order(symbol, action, lot, stop_loss=0.0, take_profit=0.0):
     result = mt5.order_send(request)
     
     if result is None: # Aggiunto controllo per NoneType
-        print(f"Errore: mt5.order_send() ha restituito None. Controllare la connessione MT5 o i parametri dell'ordine. Ultimo errore MT5: {mt5.last_error()}")
+        print(f"Errore: mt5.order_send() ha restituito None. Controllare la connessione MT5 o i parametri dell\"ordine. Ultimo errore MT5: {mt5.last_error()}")
         return False
 
     if result.retcode != mt5.TRADE_RETCODE_DONE:
         print(f"Errore ordine: {result.comment} ({result.retcode})")
         # Debug aggiuntivo per errori specifici
         if result.retcode == 10016: # Invalid stops
-            print(f"  Dettagli Invalid Stops: SL={request.get('sl')}, TP={request.get('tp')}, Price={request.get('price')}")
+            print(f"  Dettagli Invalid Stops: SL={request.get(\'sl\')}, TP={request.get(\'tp\')}, Price={request.get(\'price\')}")
         return False
     print(f"Ordine eseguito: {action} {lot} {symbol} @ {price} (SL: {stop_loss}, TP: {take_profit})")
     return True
@@ -163,6 +162,19 @@ def seconds_to_next_candle(timeframe: str):
 # -----------------------------
 while True:
     try:
+        # Gestione Posizioni Aperte
+        open_positions = mt5.positions_get(symbol=SYMBOL)
+        if open_positions is None:
+            print("Errore nel recupero delle posizioni aperte.")
+            num_open_positions = 0
+        else:
+            num_open_positions = len(open_positions)
+
+        if num_open_positions >= trading.get("max_open_trades_per_symbol", 1):
+            print(f"Numero massimo di posizioni aperte ({num_open_positions}) raggiunto per {SYMBOL}. Attendo...")
+            time.sleep(DELAY)
+            continue
+
         # Recupera i dati OHLCV per tutti i timeframe necessari
         ohlcv_data = get_ohlcv_multi_timeframe(SYMBOL, ALL_TIMEFRAMES_STR)
 
@@ -181,9 +193,10 @@ while True:
         signal = signal_data["signal"] if signal_data is not None else None
         stop_loss = signal_data["stop_loss"] if signal_data is not None and "stop_loss" in signal_data else 0.0
         take_profit = signal_data["take_profit"] if signal_data is not None and "take_profit" in signal_data else 0.0
+        lot_size = signal_data["lot_size"] if signal_data is not None and "lot_size" in signal_data else 0.0
 
-        if signal in ["BUY", "SELL"]:
-            send_order(SYMBOL, signal, LOT_SIZE, stop_loss, take_profit)
+        if signal in ["BUY", "SELL"] and lot_size > 0:
+            send_order(SYMBOL, signal, lot_size, stop_loss, take_profit)
         else:
             remaining = seconds_to_next_candle(trading["timeframe"])
             mins, secs = divmod(int(remaining.total_seconds()), 60)
