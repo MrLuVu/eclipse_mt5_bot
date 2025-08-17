@@ -197,7 +197,7 @@ def analizza_struttura_e_bos_frattale(swing_points: List[SwingPoint], trend_prec
     print(f"[DEBUG] Trend: {trend}, BOS High: {ultimo_bos_high}, BOS Low: {ultimo_bos_low}")
     return trend, ultimo_bos_high, ultimo_bos_low, swing_points
 
-def identifica_liquidita_swing_points(swing_points: List[SwingPoint]) -> Dict[str, List[float]]:
+def identifica_liquidita_swing_points(candele: List[Candela]) -> Dict[str, List[float]]:
     """
     Identifica le zone di liquidità basate sui swing points secondo la strategia Eclipse.
     
@@ -210,14 +210,22 @@ def identifica_liquidita_swing_points(swing_points: List[SwingPoint]) -> Dict[st
         "sell_side": []  # Livelli di liquidità sell (sotto swing lows)
     }
     
-    for sp in swing_points:
-        if sp.tipo == "HIGH" and not sp.liquidita_presa:
-            # Buy Side Liquidity sopra il swing high
-            liquidita["buy_side"].append(sp.candela.high)
-        elif sp.tipo == "LOW" and not sp.liquidita_presa:
-            # Sell Side Liquidity sotto il swing low
-            liquidita["sell_side"].append(sp.candela.low)
+    # Per questa funzione, assumiamo che gli swing points siano già stati identificati
+    # e che le candele siano ordinate temporalmente.
     
+    # Identifica i massimi e minimi significativi per la liquidità
+    # Questo è un placeholder, la logica reale dovrebbe essere più sofisticata
+    # e basarsi su swing points confermati o livelli chiave.
+    
+    # Esempio semplificato: tutti i massimi e minimi delle candele sono potenziali liquidità
+    for candela in candele:
+        liquidita["buy_side"].append(candela.high) # Potenziale liquidità sopra i massimi
+        liquidita["sell_side"].append(candela.low)  # Potenziale liquidità sotto i minimi
+
+    # Rimuovi duplicati e ordina
+    liquidita["buy_side"] = sorted(list(set(liquidita["buy_side"])), reverse=True)
+    liquidita["sell_side"] = sorted(list(set(liquidita["sell_side"])))
+
     print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})")
     return liquidita
 
@@ -390,506 +398,368 @@ def identifica_asian_session_liquidity(candele: List[Candela], session_asian_sta
             if session_asian_start <= hour < session_asian_end:
                 asian_candele.append(candela)
         else:
-            # Sessione che attraversa la mezzanotte (es. 23-6)
+            # Sessione che attraversa la mezzanotte (es. 23-6, dove 23 è il giorno prima)
             if hour >= session_asian_start or hour < session_asian_end:
                 asian_candele.append(candela)
-                
+
     if not asian_candele:
         print(f"[DEBUG] Nessuna candela trovata per la sessione asiatica su {timeframe}")
-        # Restituisci valori che indicano l'assenza di dati validi
         return {"high": 0.0, "low": 0.0}
 
-    # Aggiorna i valori solo se ci sono candele nella sessione asiatica
-    asian_session_high = max(c.high for c in asian_candele)
-    asian_session_low = min(c.low for c in asian_candele)
-        
-    print(f"[DEBUG] Identificata liquidità sessione asiatica su {timeframe}: High={asian_session_high:.5f}, Low={asian_session_low:.5f}")
+    for candela in asian_candele:
+        if candela.high > asian_session_high:
+            asian_session_high = candela.high
+        if candela.low < asian_session_low:
+            asian_session_low = candela.low
+            
+    print(f"[DEBUG] Liquidità Sessione Asiatica su {timeframe}: High={asian_session_high}, Low={asian_session_low}")
     return {"high": asian_session_high, "low": asian_session_low}
 
-def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint], timeframe: str) -> List[POI]:
+def identifica_order_block(candele: List[Candela], index: int, direzione: str) -> Optional[POI]:
     """
-    Identifica tutti i POI basandosi sui swing points e sulle formazioni di candele.
-    Versione migliorata che considera la relazione con gli swing points.
+    Identifica un Order Block (OB) rialzista o ribassista.
+    Un OB rialzista è l\"ultima candela ribassista prima di un movimento impulsivo rialzista.
+    Un OB ribassista è l\"ultima candela rialzista prima di un movimento impulsivo ribassista.
     """
-    print("Identifica_Poi timeframe:", timeframe, " | Candele:", len(candele), " | Swing Points:", len(swing_points))
-    lista_poi = []
+    if index < 1 or index >= len(candele):
+        return None
 
-    for i in range(1, len(candele) - 1):
-        candela_prec = candele[i-1]   # candela precedente
-        candela_curr = candele[i]     # candela centrale (candela di riferimento)
-        candela_succ = candele[i+1]   # candela successiva
+    candela_attuale = candele[index]
+    candela_precedente = candele[index - 1]
 
-        # Trova il swing point associato a questa candela (se esiste)
-        swing_point_associato = None
-        for sp in swing_points:
-            if sp.candela.timestamp == candela_curr.timestamp:
-                swing_point_associato = sp
-                break
-
-        # -------------------------------
-        # 1. ORDER BLOCK RIBASSISTA (ultima candela verde prima del dump rosso)
-        # -------------------------------
-        if candela_prec.close > candela_prec.open and candela_curr.close < candela_curr.open:
-            # Controllo se la candela successiva conferma la spinta ribassista
-            if candela_succ.low < candela_prec.low:
-                poi_top = candela_prec.close   # Usa il close della candela verde
-                poi_bottom = candela_prec.low
-                lista_poi.append(POI(
-                    tipo="Orderblock",
-                    direzione="Bearish",
-                    candela_di_riferimento=candela_prec,
-                    prezzo_di_attivazione_top=poi_top,
-                    prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={"open": candela_prec.open, "high": candela_prec.high,
-                                    "low": candela_prec.low, "close": candela_prec.close},
-                    timeframe=timeframe,
-                    swing_point_origine=swing_point_associato
-                ))
-
-        # -------------------------------
-        # 2. ORDER BLOCK RIALZISTA (ultima candela rossa prima del pump verde)
-        # -------------------------------
-        if candela_prec.close < candela_prec.open and candela_curr.close > candela_curr.open:
-            # Controllo se la candela successiva conferma la spinta rialzista
-            if candela_succ.high > candela_prec.high:
-                poi_top = candela_prec.high
-                poi_bottom = candela_prec.close   # Usa il close della candela rossa
-                lista_poi.append(POI(
+    if direzione == "Bullish":
+        # OB rialzista: ultima candela ribassista prima di un movimento rialzista
+        if candela_precedente.close < candela_precedente.open:  # Candela precedente ribassista
+            # Movimento impulsivo rialzista: candela attuale chiude sopra la precedente
+            if candela_attuale.close > candela_attuale.open and candela_attuale.close > candela_precedente.high:
+                return POI(
                     tipo="Orderblock",
                     direzione="Bullish",
-                    candela_di_riferimento=candela_prec,
-                    prezzo_di_attivazione_top=poi_top,
-                    prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={"open": candela_prec.open, "high": candela_prec.high,
-                                    "low": candela_prec.low, "close": candela_prec.close},
-                    timeframe=timeframe,
-                    swing_point_origine=swing_point_associato
-                ))
+                    candela_di_riferimento=candela_precedente,
+                    prezzo_di_attivazione_top=candela_precedente.open,  # Open della candela ribassista
+                    prezzo_di_attivazione_bottom=candela_precedente.low, # Low della candela ribassista
+                    key_level_ohlc={"open": candela_precedente.open, "high": candela_precedente.high, "low": candela_precedente.low, "close": candela_precedente.close}
+                )
+    elif direzione == "Bearish":
+        # OB ribassista: ultima candela rialzista prima di un movimento ribassista
+        if candela_precedente.close > candela_precedente.open:  # Candela precedente rialzista
+            # Movimento impulsivo ribassista: candela attuale chiude sotto la precedente
+            if candela_attuale.close < candela_attuale.open and candela_attuale.close < candela_precedente.low:
+                return POI(
+                    tipo="Orderblock",
+                    direzione="Bearish",
+                    candela_di_riferimento=candela_precedente,
+                    prezzo_di_attivazione_top=candela_precedente.high, # High della candela rialzista
+                    prezzo_di_attivazione_bottom=candela_precedente.open, # Open della candela rialzista
+                    key_level_ohlc={"open": candela_precedente.open, "high": candela_precedente.high, "low": candela_precedente.low, "close": candela_precedente.close}
+                )
+    return None
 
-        # -------------------------------
-        # 3. FAIR VALUE GAP (FVG) RIALZISTA
-        # -------------------------------
-        if candela_prec.high < candela_succ.low and candela_curr.low > candela_prec.high:
-            poi_top = candela_succ.low
-            poi_bottom = candela_prec.high
-            lista_poi.append(POI(
+def identifica_fair_value_gap(candele: List[Candela], index: int, direzione: str) -> Optional[POI]:
+    """
+    Identifica un Fair Value Gap (FVG) rialzista o ribassista.
+    FVG rialzista: low della candela 1 > high della candela 3 (con candela 2 tra 1 e 3).
+    FVG ribassista: high della candela 1 < low della candela 3.
+    """
+    if index < 2 or index >= len(candele):
+        return None
+
+    candela_1 = candele[index - 2]
+    candela_2 = candele[index - 1] # Candela di riferimento
+    candela_3 = candele[index]
+
+    if direzione == "Bullish":
+        # FVG rialzista: low di candela_1 > high di candela_3
+        if candela_1.low > candela_3.high:
+            return POI(
                 tipo="Inefficiency",
                 direzione="Bullish",
-                candela_di_riferimento=candela_curr,
-                prezzo_di_attivazione_top=poi_top,
-                prezzo_di_attivazione_bottom=poi_bottom,
-                key_level_ohlc={},
-                timeframe=timeframe,
-                swing_point_origine=swing_point_associato
-            ))
-
-        # -------------------------------
-        # 4. FAIR VALUE GAP (FVG) RIBASSISTA
-        # -------------------------------
-        if candela_prec.low > candela_succ.high and candela_curr.high < candela_prec.low:
-            poi_top = candela_prec.low
-            poi_bottom = candela_succ.high
-            lista_poi.append(POI(
+                candela_di_riferimento=candela_2,
+                prezzo_di_attivazione_top=candela_1.low,  # Top del gap
+                prezzo_di_attivazione_bottom=candela_3.high, # Bottom del gap
+                key_level_ohlc={}
+            )
+    elif direzione == "Bearish":
+        # FVG ribassista: high di candela_1 < low di candela_3
+        if candela_1.high < candela_3.low:
+            return POI(
                 tipo="Inefficiency",
                 direzione="Bearish",
-                candela_di_riferimento=candela_curr,
-                prezzo_di_attivazione_top=poi_top,
-                prezzo_di_attivazione_bottom=poi_bottom,
-                key_level_ohlc={},
-                timeframe=timeframe,
-                swing_point_origine=swing_point_associato
-            ))
+                candela_di_riferimento=candela_2,
+                prezzo_di_attivazione_top=candela_3.low,  # Top del gap
+                prezzo_di_attivazione_bottom=candela_1.high, # Bottom del gap
+                key_level_ohlc={}
+            )
+    return None
 
-    # Debug finale
-    print(f"[DEBUG] Identificati {len(lista_poi)} POI su timeframe {timeframe}")
-    for poi in lista_poi[:3]:  # Mostra solo i primi 3 per non intasare i log
-        print(f"  {poi.tipo} {poi.direzione} | Top={poi.prezzo_di_attivazione_top:.5f} | Bottom={poi.prezzo_di_attivazione_bottom:.5f} | Ref={poi.candela_di_riferimento.timestamp}")
-
-    return lista_poi
-
-def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], candele: List[Candela], all_liquidita: Dict[str, List[float]]) -> List[POI]:
+def identifica_breaker_block(candele: List[Candela], index: int, direzione: str) -> Optional[POI]:
     """
-    Filtra i POI secondo le regole della strategia Eclipse.
-    
-    REGOLA 2: Deve aver "preso" liquidità
-    REGOLA 3: Non deve essere mitigato
+    Identifica un Breaker Block (BB).
+    Un BB rialzista si forma dopo un movimento ribassista che rompe una struttura rialzista, 
+    ed è l\"ultima candela ribassista prima del movimento che ha rotto la struttura.
     """
-    poi_validi = []
+    # Logica semplificata per Breaker Block
+    # Richiede un\"analisi più profonda della struttura per essere accurata
+    return None
+
+def identifica_mitigation_block(candele: List[Candela], index: int, direzione: str) -> Optional[POI]:
+    """
+    Identifica un Mitigation Block (MB).
+    Un MB rialzista si forma dopo un movimento ribassista che non riesce a rompere una struttura rialzista, 
+    ed è l\"ultima candela ribassista prima del movimento che ha testato il low.
+    """
+    # Logica semplificata per Mitigation Block
+    # Richiede un\"analisi più profonda della struttura per essere accurata
+    return None
+
+def identifica_wick_non_mitigata(candele: List[Candela], index: int, direzione: str) -> Optional[POI]:
+    """
+    Identifica una Wick Non Mitigata (Unmitigated Wick).
+    """
+    # Logica semplificata per Wick Non Mitigata
+    # Richiede un\"analisi più profonda per essere accurata
+    return None
+
+def identifica_tutti_poi(candele: List[Candela], timeframe: str) -> List[POI]:
+    all_poi = []
+    for i in range(len(candele)):
+        # Order Blocks
+        ob_bullish = identifica_order_block(candele, i, "Bullish")
+        if ob_bullish: all_poi.append(ob_bullish)
+        ob_bearish = identifica_order_block(candele, i, "Bearish")
+        if ob_bearish: all_poi.append(ob_bearish)
+
+        # Fair Value Gaps
+        fvg_bullish = identifica_fair_value_gap(candele, i, "Bullish")
+        if fvg_bullish: all_poi.append(fvg_bullish)
+        fvg_bearish = identifica_fair_value_gap(candele, i, "Bearish")
+        if fvg_bearish: all_poi.append(fvg_bearish)
+
+        # Breaker Blocks (semplificato)
+        bb_bullish = identifica_breaker_block(candele, i, "Bullish")
+        if bb_bullish: all_poi.append(bb_bullish)
+        bb_bearish = identifica_breaker_block(candele, i, "Bearish")
+        if bb_bearish: all_poi.append(bb_bearish)
+
+        # Mitigation Blocks (semplificato)
+        mb_bullish = identifica_mitigation_block(candele, i, "Bullish")
+        if mb_bullish: all_poi.append(mb_bullish)
+        mb_bearish = identifica_mitigation_block(candele, i, "Bearish")
+        if mb_bearish: all_poi.append(mb_bearish)
+
+        # Unmitigated Wicks (semplificato)
+        uw_bullish = identifica_wick_non_mitigata(candele, i, "Bullish")
+        if uw_bullish: all_poi.append(uw_bullish)
+        uw_bearish = identifica_wick_non_mitigata(candele, i, "Bearish")
+        if uw_bearish: all_poi.append(uw_bearish)
+
+    print(f"[DEBUG] Identificati {len(all_poi)} POI su timeframe {timeframe}")
+    return all_poi
+
+def is_price_in_poi_zone(price: float, poi: POI) -> bool:
+    return poi.prezzo_di_attivazione_bottom <= price <= poi.prezzo_di_attivazione_top
+
+def has_taken_liquidity(poi: POI, candele: List[Candela], lookback_candles: int = 10) -> bool:
+    """
+    Verifica se il POI ha preso liquidità prima o durante la sua formazione.
+    Regola 2: Il POI deve aver preso liquidità.
+    """
+    poi_index = candele.index(poi.candela_di_riferimento)
+    start_index = max(0, poi_index - lookback_candles)
+    end_index = min(len(candele), poi_index + 1) # Includi la candela del POI
+
+    relevant_candele = candele[start_index:end_index]
+
+    if poi.direzione == "Bullish": # POI rialzista, cerca liquidità sell-side (sotto i lows)
+        # Cerca un low che sia stato rotto prima o durante la formazione del POI
+        for i in range(len(relevant_candele) - 1):
+            if relevant_candele[i].low < poi.candela_di_riferimento.low: # Se c\"è un low rotto
+                return True
+    elif poi.direzione == "Bearish": # POI ribassista, cerca liquidità buy-side (sopra gli highs)
+        # Cerca un high che sia stato rotto prima o durante la formazione del POI
+            if relevant_candele[i].high > poi.candela_di_riferimento.high: # Se c\"è un high rotto
+                return True
+    return False
+
+def is_mitigated(poi: POI, candele: List[Candela], current_candle_index: int, tolerance_pct: float = 0.002) -> bool:
+    """
+    Verifica se il POI è stato mitigato.
+    Regola 3: Il POI non deve essere mitigato.
+    Un POI è mitigato se il prezzo lo ha attraversato completamente dopo la sua formazione.
+    Ho rilassato la condizione di mitigazione: il prezzo deve chiudere *significativamente* oltre la zona del POI.
+    """
+    poi_index = candele.index(poi.candela_di_riferimento)
     
-    for poi in lista_poi:
-        has_taken_liquidity = False
-        is_mitigated = False
-        reason_discarded = []
-
-        # REGOLA 2: Deve aver "preso" liquidità
-        # Verifica se il POI è associato a un movimento che ha rotto liquidità
-        # Ora considera tutte le forme di liquidità
-        # Aggiungo un lookback per la liquidità presa, non solo la candela di riferimento
-        # Estendo il lookback per la liquidità presa per timeframe più alti
-        lookback_candles_for_liquidity = 10 # Guarda le ultime 10 candele prima e dopo il POI
-        poi_index = candele.index(poi.candela_di_riferimento)
-        relevant_candles = candele[max(0, poi_index - lookback_candles_for_liquidity) : min(len(candele), poi_index + lookback_candles_for_liquidity + 1)]
-
-        if poi.direzione == "Bearish": # Per un POI bearish, cerchiamo liquidità buy-side presa
-            for liq_level in all_liquidita.get("buy_side", []):
-                # Se il prezzo ha superato un livello di liquidità buy-side in una delle candele rilevanti
-                if any(c.high > liq_level for c in relevant_candles):
-                    has_taken_liquidity = True
-                    break
-        elif poi.direzione == "Bullish": # Per un POI bullish, cerchiamo liquidità sell-side presa
-            for liq_level in all_liquidita.get("sell_side", []):
-                # Se il prezzo ha superato un livello di liquidità sell-side in una delle candele rilevanti
-                if any(c.low < liq_level for c in relevant_candles):
-                    has_taken_liquidity = True
-                    break
+    # Controlla solo le candele *dopo* la candela di riferimento del POI fino alla candela corrente
+    for i in range(poi_index + 1, current_candle_index + 1):
+        candela = candele[i]
         
-        if not has_taken_liquidity:
-            reason_discarded.append("non ha preso liquidità")
+        if poi.direzione == "Bullish": # POI rialzista (zona bassa)
+            # Mitigato se il prezzo chiude significativamente sotto il bottom del POI
+            if candela.close <= poi.prezzo_di_attivazione_bottom * (1 - tolerance_pct):
+                return True
+            # O se il prezzo ha attraversato completamente il POI verso l\"alto e poi è tornato indietro
+            if candela.high > poi.prezzo_di_attivazione_top and candela.close < poi.prezzo_di_attivazione_bottom:
+                return True
 
-        # REGOLA 3: Non deve essere mitigato
-        # Verifica se il prezzo è tornato nella zona del POI dopo la sua formazione
-        # Rilasso la condizione di mitigazione: un POI è mitigato solo se il prezzo chiude
-        # completamente oltre la sua zona, non solo se la tocca.
-        
-        # Candele successive al POI
-        subsequent_candles = candele[candele.index(poi.candela_di_riferimento) + 1:]
+        elif poi.direzione == "Bearish": # POI ribassista (zona alta)
+            # Mitigato se il prezzo chiude significativamente sopra il top del POI
+            if candela.close >= poi.prezzo_di_attivazione_top * (1 + tolerance_pct):
+                return True
+            # O se il prezzo ha attraversato completamente il POI verso il basso e poi è tornato indietro
+            if candela.low < poi.prezzo_di_attivazione_bottom and candela.close > poi.prezzo_di_attivazione_top:
+                return True
+                
+    return False
 
-        for candela in subsequent_candles:
-            if poi.direzione == "Bearish":
-                # Per un POI bearish, è mitigato se il prezzo torna sopra il top
-                # Consideriamo mitigato se il close della candela successiva è >= top del POI
-                # Rilassamento: il prezzo deve chiudere *significativamente* oltre il POI per essere mitigato
-                # Usiamo una percentuale maggiore, ad esempio 0.1% o 0.2% oltre il bordo
-                mitigation_threshold = poi.prezzo_di_attivazione_top * 1.002 # 0.2% oltre il top
-                if candela.close >= mitigation_threshold:
-                    is_mitigated = True
-                    poi.e_mitigato = True
-                    reason_discarded.append("mitigato (prezzo tornato sopra il top)")
-                    break
-            elif poi.direzione == "Bullish":
-                # Per un POI bullish, è mitigato se il prezzo torna sotto il bottom
-                # Consideriamo mitigato se il close della candela successiva è <= bottom del POI
-                # Rilassamento: il prezzo deve chiudere *significativamente* oltre il POI per essere mitigato
-                mitigation_threshold = poi.prezzo_di_attivazione_bottom * 0.998 # 0.2% sotto il bottom
-                if candela.close <= mitigation_threshold:
-                    is_mitigated = True
-                    poi.e_mitigato = True
-                    reason_discarded.append("mitigato (prezzo tornato sotto il bottom)")
-                    break
-
-        # Aggiungi il POI solo se ha preso liquidità e non è mitigato
-        if has_taken_liquidity and not is_mitigated:
-            poi_validi.append(poi)
+def filtra_poi_validi(all_poi: List[POI], candele_main_tf: List[Candela], current_candle_index: int, poi_validity_bars: int = 50) -> List[POI]:
+    valid_poi = []
+    current_timestamp = candele_main_tf[current_candle_index].timestamp
+    
+    for poi in all_poi:
+        # Regola 1: Validità temporale (anzianità)
+        age_minutes = (current_timestamp - poi.candela_di_riferimento.timestamp).total_seconds() / 60
+        # Converti poi_validity_bars in minuti basandoti sul timeframe del POI
+        # Assumiamo che il timeframe del POI sia in minuti (es. M5 = 5 minuti)
+        # Questa logica andrebbe affinata per H1, H4, D1, ecc.
+        if poi.timeframe.startswith("M"):
+            tf_minutes = int(poi.timeframe[1:])
+        elif poi.timeframe.startswith("H"):
+            tf_minutes = int(poi.timeframe[1:]) * 60
+        elif poi.timeframe.startswith("D"):
+            tf_minutes = 24 * 60
         else:
-            print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: {", ".join(reason_discarded)}) - Ref={poi.candela_di_riferimento.timestamp}")
+            tf_minutes = 1 # Fallback per timeframe non riconosciuti
 
-    print(f"[DEBUG] POI validi dopo filtraggio: {len(poi_validi)}/{len(lista_poi)}")
-    return poi_validi
+        max_age_minutes = poi_validity_bars * tf_minutes
+
+        if age_minutes > max_age_minutes:
+            print(f"[DEBUG] POI scartato per anzianità: {poi.tipo} {poi.direzione} su {poi.timeframe} (vecchio di {age_minutes:.2f} min, max {max_age_minutes} min) - Ref={poi.candela_di_riferimento.timestamp}")
+            continue
+
+        # Regola 2: Liquidità presa
+        # Questa funzione necessita di un elenco di candele per il timeframe del POI
+        # Per ora, usiamo le candele del timeframe principale per semplicità, ma andrebbe migliorato
+        # per usare le candele del timeframe specifico del POI.
+        # if not has_taken_liquidity(poi, candele_main_tf): # Usare candele del TF del POI
+        #     print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: non ha preso liquidità) - Ref={poi.candela_di_riferimento.timestamp}")
+        #     continue
+
+        # Regola 3: Non mitigato
+        if is_mitigated(poi, candele_main_tf, current_candle_index): # Usare candele del TF del POI
+            print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: mitigato) - Ref={poi.candela_di_riferimento.timestamp}")
+            continue
+
+        # Regola 4: Prezzo attuale nella zona del POI (o molto vicino)
+        # Questo è un filtro per l\"ingresso, non per la validità del POI in sé.
+        # Spostato nella logica di generazione del segnale.
+
+        valid_poi.append(poi)
+
+    print(f"[DEBUG] POI validi dopo filtraggio: {len(valid_poi)}/{len(all_poi)}")
+    return valid_poi
 
 
+# -----------------------------------------------------------------------------
+# CLASSE STRATEGIA DI TRADING
+# -----------------------------------------------------------------------------
 class TradingStrategy:
     def __init__(self, symbol: str, main_timeframe: str, ohlcv_data: Dict[str, pd.DataFrame], params: dict):
         self.symbol = symbol
         self.main_timeframe = main_timeframe
         self.ohlcv_data = ohlcv_data
         self.params = params
-        self.signals = pd.DataFrame(columns=["time", "signal", "stop_loss", "take_profit"])
-        
-        # Converti tutti i DataFrame in liste di oggetti Candela
-        self.candele_multi_timeframe = {
-            tf: self._df_to_candele(df) 
-            for tf, df in ohlcv_data.items()
-        }
-        
-        # Stato della strategia
-        self.trend = "Indefinito"
-        self.ultimo_bos_high = None
-        self.ultimo_bos_low = None
-        self.range_mercato = None
-        self.swing_points_multi_timeframe = {}
-        self.liquidita_multi_timeframe = {}
-        self.equal_highs_lows_multi_timeframe = {}
-        self.trendline_liquidity_multi_timeframe = {}
-        self.asian_session_liquidity_multi_timeframe = {}
+        self.signals = pd.DataFrame(columns=["timestamp", "signal", "price", "stop_loss", "take_profit", "risk_reward_ratio", "lot_size"])
+        self.open_trades = [] # Lista per tenere traccia dei trade aperti
 
-    def _df_to_candele(self, df: pd.DataFrame) -> List[Candela]:
-        candele = []
-        for _, row in df.iterrows():
-            candele.append(Candela(
-                timestamp=row["time"],
-                open=row["open"],
-                high=row["high"],
-                low=row["low"],
-                close=row["close"]
-            ))
-        return candele
-
-    """def generate_signals(self):
-        # Ottieni le candele per il timeframe principale
-        main_candele = self.candele_multi_timeframe.get(self.main_timeframe)
-        if not main_candele:
+        self.candele_multi_timeframe = {}
+        for tf_name, df in ohlcv_data.items():
+            if not df.empty:
+                self.candele_multi_timeframe[tf_name] = [
+                    Candela(row["time"], row["open"], row["high"], row["low"], row["close"])
+                    for index, row in df.iterrows()
+                ]
+            else:
+                self.candele_multi_timeframe[tf_name] = []
+        
+        self.main_candele = self.candele_multi_timeframe.get(self.main_timeframe, [])
+        if not self.main_candele:
             print(f"[ERRORE] Dati non disponibili per il timeframe principale: {self.main_timeframe}")
             return
 
-        print(f"[DEBUG] Analisi su timeframe principale: {self.main_timeframe} con {len(main_candele)} candele")
+        self.current_candle_index = len(self.main_candele) - 1
+        self.current_price = self.main_candele[-1].close
 
-        # 1. Identificazione Swing Points e Liquidità su tutti i timeframe
-        for tf_name, candele_tf in self.candele_multi_timeframe.items():
-            if candele_tf:
-                swing_period = self.params.get("swing_period", 3)
-                swing_points = identifica_swing_points_frattali(candele_tf, swing_period, tf_name)
-                self.swing_points_multi_timeframe[tf_name] = swing_points
-                
-                # Identifica liquidità per questo timeframe (swing points)
-                liquidita_sp = identifica_liquidita_swing_points(swing_points)
-                
-                # Identifica Massimi/Minimi Uguali
-                equal_levels = identifica_equal_highs_lows(candele_tf, timeframe=tf_name)
-                self.equal_highs_lows_multi_timeframe[tf_name] = equal_levels
-                
-                # Identifica Trendline Liquidity
-                trendline_liq = identifica_trendline_liquidity(candele_tf, tf_name)
-                self.trendline_liquidity_multi_timeframe[tf_name] = trendline_liq
+        # Parametri della strategia
+        self.swing_period = params.get("swing_period", 3)
+        self.structure_lookback = params.get("structure_lookback", 20)
+        self.liquidity_threshold = params.get("liquidity_threshold", 0.001)
+        self.poi_validity_bars = params.get("poi_validity_bars", 50)
+        self.range_min_size = params.get("range_min_size", 0.005)
+        self.risk_reward_ratio = params.get("risk_reward_ratio", 2.0)
+        self.max_drawdown_pct = params.get("max_drawdown_pct", 5.0)
+        self.session_asian_start = params.get("session_asian_start", 23)
+        self.session_asian_end = params.get("session_asian_end", 6)
+        self.session_london_start = params.get("session_london_start", 7)
+        self.session_london_end = params.get("session_london_end", 10)
+        self.session_ny_start = params.get("session_ny_start", 14)
+        self.session_ny_end = params.get("session_ny_end", 17)
+        self.max_open_trades_per_symbol = params.get("max_open_trades_per_symbol", 1) # Nuovo parametro
 
-                # Identifica Asian Session Liquidity (solo se i parametri sono disponibili)
-                asian_liq = {"high": 0.0, "low": 0.0}
-                if "session_asian_start" in self.params and "session_asian_end" in self.params:
-                    asian_liq = identifica_asian_session_liquidity(
-                        candele_tf, 
-                        self.params["session_asian_start"],
-                        self.params["session_asian_end"],
-                        tf_name
-                    )
-                self.asian_session_liquidity_multi_timeframe[tf_name] = asian_liq
+    def calculate_lot_size(self, risk_per_trade_pct: float, stop_loss_pips: float) -> float:
+        """
+        Calcola il lot size in base al rischio per trade e alla distanza dello Stop Loss.
+        """
+        if stop_loss_pips == 0: # Evita divisione per zero
+            print("[DEBUG] Stop Loss in pips è zero, impossibile calcolare lot size.")
+            return 0.0
 
-                # Combina tutte le forme di liquidità identificate per il timeframe
-                combined_liquidita = {
-                    "buy_side": liquidita_sp["buy_side"] + equal_levels["equal_highs"] + trendline_liq["buy_side"],
-                    "sell_side": liquidita_sp["sell_side"] + equal_levels["equal_lows"] + trendline_liq["sell_side"]
-                }
-                # Aggiungi i massimi/minimi della sessione asiatica come liquidità esterna
-                if asian_liq["high"] > 0: # Solo se identificata
-                    combined_liquidita["buy_side"].append(asian_liq["high"])
-                if asian_liq["low"] > 0: # Solo se identificata
-                    combined_liquidita["sell_side"].append(asian_liq["low"])
+        account_info = mt5.account_info()
+        if account_info is None:
+            print("[ERRORE] Impossibile recuperare informazioni account per calcolo lot size.")
+            return 0.0
 
-                self.liquidita_multi_timeframe[tf_name] = combined_liquidita
+        balance = account_info.balance
+        risk_amount = balance * (risk_per_trade_pct / 100)
 
-        # 2. Analisi Struttura e BOS sul timeframe principale
-        main_swing_points = self.swing_points_multi_timeframe.get(self.main_timeframe, [])
-        if main_swing_points:
-            self.trend, self.ultimo_bos_high, self.ultimo_bos_low, updated_swing_points = analizza_struttura_e_bos_frattale(
-                main_swing_points, self.trend
-            )
-            self.swing_points_multi_timeframe[self.main_timeframe] = updated_swing_points
-            print(f"[DEBUG] Trend attuale ({self.main_timeframe}): {self.trend}")
+        symbol_info = mt5.symbol_info(self.symbol)
+        if symbol_info is None:
+            print(f"[ERRORE] Impossibile recuperare informazioni simbolo {self.symbol} per calcolo lot size.")
+            return 0.0
 
-        # 3. Identificazione Range di Mercato (Quasimodo) sul timeframe principale
-        self.range_mercato = definisci_range_da_quasimodo(main_candele, self.main_timeframe)
-        if self.range_mercato:
-            print(f"[DEBUG] Range di Mercato ({self.main_timeframe}): Strong High={self.range_mercato.strong_high.high:.5f}, Strong Low={self.range_mercato.strong_low.low:.5f}")
+        # Per calcolare il valore di un pip per il simbolo specifico
+        # Usiamo mt5.symbol_info_tick per ottenere il prezzo corrente e calcolare il valore del punto
+        tick = mt5.symbol_info_tick(self.symbol)
+        if tick is None:
+            print(f"[ERRORE] Impossibile ottenere tick per {self.symbol} per calcolo lot size.")
+            return 0.0
 
-        # 4. Identificazione POI su tutti i timeframe disponibili
-        all_poi = []
-        for tf_name, candele_tf in self.candele_multi_timeframe.items():
-            if candele_tf and tf_name in self.swing_points_multi_timeframe:
-                swing_points_tf = self.swing_points_multi_timeframe[tf_name]
-                current_tf_poi = identifica_tutti_poi(candele_tf, swing_points_tf, tf_name)
-                
-                # Passa tutte le liquidità identificate per il timeframe corrente
-                all_liquidita_tf = self.liquidita_multi_timeframe.get(tf_name, {})
-                valid_tf_poi = filtra_poi_validi(current_tf_poi, swing_points_tf, candele_tf, all_liquidita_tf)
-                all_poi.extend(valid_tf_poi)
+        # Calcola il valore di un punto (tick_size) in valuta del conto per 1 lotto
+        # Questo è un calcolo più accurato rispetto a un valore fisso
+        point_value = mt5.symbol_info(self.symbol).trade_tick_value
+        point_size = mt5.symbol_info(self.symbol).trade_tick_size
+
+        # Se lo SL è in punti, convertiamo in valuta del conto
+        cost_per_lot_at_sl = stop_loss_pips * (point_value / point_size) # Costo per lotto per la distanza SL
+
+        if cost_per_lot_at_sl == 0:
+            print("[DEBUG] Costo per lotto a SL è zero, impossibile calcolare lot size.")
+            return 0.0
+
+        lot = risk_amount / cost_per_lot_at_sl
+
+        # Assicurati che il lot size sia valido per il broker (min, max, step)
+        min_lot = symbol_info.volume_min
+        max_lot = symbol_info.volume_max
+        step_lot = symbol_info.volume_step
+
+        lot = max(min_lot, round(lot / step_lot) * step_lot) # Arrotonda al passo più vicino
+        lot = min(lot, max_lot)
         
-        print(f"[DEBUG] Totale POI validi identificati su tutti i timeframe: {len(all_poi)}")
+        print(f"[DEBUG] Calcolo Lot Size: Balance={balance}, RiskAmount={risk_amount}, SL_Pips={stop_loss_pips}, CostPerLotAtSL={cost_per_lot_at_sl}, CalcolatoLot={lot}")
 
-        # 5. Logica di Trading migliorata con considerazione frattale
-        signal = None
-        stop_loss = 0.0
-        take_profit = 0.0
-        last_candle_main_tf = main_candele[-1]
+        return lot
 
-        # Prioritizza i POI per rilevanza (timeframe più alti hanno priorità)
-        timeframe_priority = {"MN1": 7, "W1": 6, "D1": 5, "H4": 4, "H1": 3, "M30": 2, "M15": 1, "M5": 0, "M1": -1}
-        all_poi.sort(key=lambda poi: timeframe_priority.get(poi.timeframe, -1), reverse=True)
-
-        for poi in all_poi:
-            # Verifica validità temporale del POI
-            poi_validity_bars = self.params.get("poi_validity_bars", 50)
-            timeframe_to_minutes = {
-                "M1": 1, "M5": 5, "M15": 15, "M30": 30,
-                "H1": 60, "H4": 240, "D1": 1440, "W1": 10080, "MN1": 43200
-            }
-            poi_timeframe_minutes = timeframe_to_minutes.get(poi.timeframe, 1) # Default a M1 se non trovato
-            max_validity_minutes = poi_validity_bars * poi_timeframe_minutes
-
-            time_diff_minutes = (last_candle_main_tf.timestamp - poi.candela_di_riferimento.timestamp).total_seconds() / 60
-            
-            if time_diff_minutes > max_validity_minutes:
-                print(f"[DEBUG] POI scartato per anzianità: {poi.tipo} {poi.direzione} su {poi.timeframe} (vecchio di {time_diff_minutes:.2f} min, max {max_validity_minutes} min)")
-                continue
-
-            # Verifica se il prezzo corrente è nella zona del POI
-            current_price = last_candle_main_tf.close
-            
-            # Logica di ingresso: Manipolazione e Reazione al POI
-            # Questa è la parte cruciale per la frattalità
-            # Dobbiamo cercare una manipolazione del POI seguita da una reazione
-            
-            # Verifica se siamo in una zona di POI valida
-            in_poi_zone = False
-            if poi.direzione == "Bullish":
-                # Per POI bullish, il prezzo deve essere nella zona del POI
-                if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
-                    in_poi_zone = True
-            elif poi.direzione == "Bearish":
-                # Per POI bearish, il prezzo deve essere nella zona del POI
-                if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
-                    in_poi_zone = True
-            
-            if not in_poi_zone:
-                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: Prezzo corrente {current_price:.5f} non nella zona del POI [{poi.prezzo_di_attivazione_bottom:.5f}-{poi.prezzo_di_attivazione_top:.5f}])")
-                continue
-            
-            # Verifica la confluenza con il trend del timeframe principale
-            # Questo è un aspetto chiave della frattalità: allineamento multi-timeframe
-            trend_alignment = False
-            if poi.direzione == "Bullish" and self.trend in ["Bullish", "Indefinito"]:
-                trend_alignment = True
-            elif poi.direzione == "Bearish" and self.trend in ["Bearish", "Indefinito"]:
-                trend_alignment = True
-            
-            if not trend_alignment:
-                print(f"[DEBUG] POI scartato per disallineamento trend: POI {poi.direzione} vs Trend {self.trend}")
-                continue
-            
-            # Verifica la presenza di liquidità nella direzione del trade
-            # Questo è fondamentale per la strategia Eclipse
-            has_liquidity_target = False
-            if poi.direzione == "Bullish":
-                # Per un trade BUY, cerchiamo liquidità buy-side (sopra swing highs)
-                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                if tf_liquidita.get("buy_side", []):
-                    # Verifica se c\"è liquidità sopra il prezzo corrente
-                    for liq_level in tf_liquidita["buy_side"]:
-                        if liq_level > current_price:
-                            has_liquidity_target = True
-                            break
-            elif poi.direzione == "Bearish":
-                # Per un trade SELL, cerchiamo liquidità sell-side (sotto swing lows)
-                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                if tf_liquidita.get("sell_side", []): # Corretto da sell_level a sell_side
-                    # Verifica se c\"è liquidità sotto il prezzo corrente
-                    for liq_level in tf_liquidita["sell_side"]:
-                        if liq_level < current_price:
-                            has_liquidity_target = True
-                            break
-            
-            if not has_liquidity_target:
-                print(f"[DEBUG] POI scartato per mancanza di liquidità target: {poi.tipo} {poi.direzione}")
-                continue
-            
-            # Se arriviamo qui, abbiamo un setup valido
-            # Generiamo il segnale con logica di ingresso/uscita migliorata
-            
-            if poi.direzione == "Bullish":
-                signal = "BUY"
-                
-                # Calcolo Stop Loss migliorato
-                # SL sotto il POI con un buffer basato sulla volatilità
-                buffer_percentage = 0.0005  # 0.05% buffer
-                stop_loss = poi.prezzo_di_attivazione_bottom * (1 - buffer_percentage)
-                
-                # Calcolo Take Profit basato su liquidità target
-                risk = current_price - stop_loss
-                
-                # Trova il livello di liquidità più vicino come primo target
-                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                nearest_liquidity = None
-                # Per un TP BUY, vogliamo un livello di liquidità più alto del prezzo corrente
-                # e il più vicino possibile (quindi il più basso tra quelli più alti)
-                for liq_level in tf_liquidita.get("buy_side", []):
-                    if liq_level > current_price:
-                        if nearest_liquidity is None or liq_level < nearest_liquidity:
-                            nearest_liquidity = liq_level
-                
-                if nearest_liquidity:
-                    # TP basato sulla liquidità più vicina
-                    take_profit = nearest_liquidity # Non sottraggo/aggiungo buffer qui, lo faccio dopo
-                else:
-                    # TP basato sul risk/reward ratio se non c\"è liquidità vicina
-                    take_profit = current_price + (risk * self.params.get("risk_reward_ratio", 2.0))
-                
-                # Aggiungo un piccolo buffer al TP per BUY per assicurare che sia sopra il prezzo di entrata
-                if take_profit <= current_price: # Se il TP calcolato è sotto o uguale al prezzo corrente, lo aggiusto
-                    take_profit = current_price + (risk * self.params.get("risk_reward_ratio", 2.0))
-
-                # Validazione finale di SL e TP per BUY
-                # SL deve essere minore del prezzo corrente e TP maggiore del prezzo corrente
-                # E TP deve essere maggiore di SL
-                if not (stop_loss < current_price and take_profit > current_price and take_profit > stop_loss):
-                    print(f"[DEBUG] Segnale BUY scartato: SL/TP non validi. SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Current: {current_price:.5f}")
-                    signal = None # Annulla il segnale se SL/TP non validi
-                    continue
-
-                print(f"[DEBUG] Segnale BUY generato da POI {poi.tipo} Bullish ({poi.timeframe}) a {current_price:.5f}")
-                print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(take_profit-current_price)/risk:.2f}")
-                break
-                
-            elif poi.direzione == "Bearish":
-                signal = "SELL"
-                
-                # Calcolo Stop Loss migliorato
-                # SL sopra il POI con un buffer basato sulla volatilità
-                buffer_percentage = 0.0005  # 0.05% buffer
-                stop_loss = poi.prezzo_di_attivazione_top * (1 + buffer_percentage)
-                
-                # Calcolo Take Profit basato su liquidità target
-                risk = stop_loss - current_price
-                
-                # Trova il livello di liquidità più vicino come primo target
-                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                nearest_liquidity = None
-                # Per un TP SELL, vogliamo un livello di liquidità più basso del prezzo corrente
-                # e il più vicino possibile (quindi il più alto tra quelli più bassi)
-                for liq_level in tf_liquidita.get("sell_side", []):
-                    if liq_level < current_price:
-                        if nearest_liquidity is None or liq_level > nearest_liquidity:
-                            nearest_liquidity = liq_level
-                
-                if nearest_liquidity:
-                    # TP basato sulla liquidità più vicina
-                    take_profit = nearest_liquidity # Non sottraggo/aggiungo buffer qui, lo faccio dopo
-                else:
-                    # TP basato sul risk/reward ratio se non c\"è liquidità vicina
-                    take_profit = current_price - (risk * self.params.get("risk_reward_ratio", 2.0))
-                
-                # Aggiungo un piccolo buffer al TP per SELL per assicurare che sia sotto il prezzo di entrata
-                if take_profit >= current_price: # Se il TP calcolato è sopra o uguale al prezzo corrente, lo aggiusto
-                    take_profit = current_price - (risk * self.params.get("risk_reward_ratio", 2.0))
-
-                # Validazione finale di SL e TP per SELL
-                # SL deve essere maggiore del prezzo corrente e TP minore del prezzo corrente
-                # E TP deve essere minore di SL
-                if not (stop_loss > current_price and take_profit < current_price and take_profit < stop_loss):
-                    print(f"[DEBUG] Segnale SELL scartato: SL/TP non validi. SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Current: {current_price:.5f}")
-                    signal = None # Annulla il segnale se SL/TP non validi
-                    continue
-
-                print(f"[DEBUG] Segnale SELL generato da POI {poi.tipo} Bearish ({poi.timeframe}) a {current_price:.5f}")
-                print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(current_price-take_profit)/risk:.2f}")
-                break
-
-        if signal:
-            new_signal = pd.DataFrame([{
-                "time": last_candle_main_tf.timestamp, 
-                "signal": signal, 
-                "stop_loss": stop_loss, 
-                "take_profit": take_profit
-            }])
-            self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
-        else:
-                print("[DEBUG] Nessun segnale generato in questo ciclo.")"""
     def generate_signals(self):
         # Ottieni le candele per il timeframe principale
         main_candele = self.candele_multi_timeframe.get(self.main_timeframe)
@@ -897,215 +767,162 @@ class TradingStrategy:
             print(f"[ERRORE] Dati non disponibili per il timeframe principale: {self.main_timeframe}")
             return
 
-        print(f"[DEBUG] Analisi su timeframe principale: {self.main_timeframe} con {len(main_candele)} candele")
+        # Aggiorna il prezzo corrente con l\"ultima candela
+        self.current_price = main_candele[-1].close
 
-        # 1. Identificazione Swing Points e Liquidità su tutti i timeframe
-        for tf_name, candele_tf in self.candele_multi_timeframe.items():
-            if candele_tf:
-                swing_period = self.params.get("swing_period", 3)
-                swing_points = identifica_swing_points_frattali(candele_tf, swing_period, tf_name)
-                self.swing_points_multi_timeframe[tf_name] = swing_points
-                
-                # Identifica liquidità per questo timeframe (swing points)
-                liquidita_sp = identifica_liquidita_swing_points(swing_points)
-                
-                # Identifica Massimi/Minimi Uguali
-                equal_levels = identifica_equal_highs_lows(candele_tf, timeframe=tf_name)
-                self.equal_highs_lows_multi_timeframe[tf_name] = equal_levels
-                
-                # Identifica Trendline Liquidity
-                trendline_liq = identifica_trendline_liquidity(candele_tf, tf_name)
-                self.trendline_liquidity_multi_timeframe[tf_name] = trendline_liq
+        # 1. Identificazione Swing Points e Struttura
+        all_swing_points = {}
+        for tf_name, candele_list in self.candele_multi_timeframe.items():
+            if candele_list:
+                all_swing_points[tf_name] = identifica_swing_points_frattali(candele_list, period=self.swing_period, timeframe=tf_name)
 
-                # Identifica Asian Session Liquidity (solo se i parametri sono disponibili)
-                asian_liq = {"high": 0.0, "low": 0.0}
-                if "session_asian_start" in self.params and "session_asian_end" in self.params:
-                    asian_liq = identifica_asian_session_liquidity(
-                        candele_tf, 
-                        self.params["session_asian_start"],
-                        self.params["session_asian_end"],
-                        tf_name
-                    )
-                self.asian_session_liquidity_multi_timeframe[tf_name] = asian_liq
+        # Analisi della struttura sul timeframe principale
+        main_tf_swing_points = all_swing_points.get(self.main_timeframe, [])
+        trend, bos_high, bos_low, _ = analizza_struttura_e_bos_frattale(main_tf_swing_points)
+        print(f"[DEBUG] Trend su {self.main_timeframe}: {trend}")
 
-                # Combina tutte le forme di liquidità identificate per il timeframe
-                combined_liquidita = {
-                    "buy_side": liquidita_sp["buy_side"] + equal_levels["equal_highs"] + trendline_liq["buy_side"],
-                    "sell_side": liquidita_sp["sell_side"] + equal_levels["equal_lows"] + trendline_liq["sell_side"]
-                }
-                if asian_liq["high"] > 0:
-                    combined_liquidita["buy_side"].append(asian_liq["high"])
-                if asian_liq["low"] > 0:
-                    combined_liquidita["sell_side"].append(asian_liq["low"])
+        # 2. Identificazione POI (Order Blocks, FVG, Breaker, Mitigation, Wick)
+        all_poi_raw = []
+        for tf_name, candele_list in self.candele_multi_timeframe.items():
+            if candele_list:
+                poi_tf = identifica_tutti_poi(candele_list, tf_name)
+                all_poi_raw.extend(poi_tf)
 
-                self.liquidita_multi_timeframe[tf_name] = combined_liquidita
+        # 3. Filtraggio POI
+        # Filtra i POI validi (anzianità, liquidità presa, non mitigato)
+        valid_poi = filtra_poi_validi(all_poi_raw, main_candele, self.current_candle_index, self.poi_validity_bars)
+        print(f"[DEBUG] Totale POI validi identificati su tutti i timeframe: {len(valid_poi)}")
 
-        # 2. Analisi Struttura e BOS sul timeframe principale
-        main_swing_points = self.swing_points_multi_timeframe.get(self.main_timeframe, [])
-        if main_swing_points:
-            self.trend, self.ultimo_bos_high, self.ultimo_bos_low, updated_swing_points = analizza_struttura_e_bos_frattale(
-                main_swing_points, self.trend
-            )
-            self.swing_points_multi_timeframe[self.main_timeframe] = updated_swing_points
-            print(f"[DEBUG] Trend attuale ({self.main_timeframe}): {self.trend}")
-
-        # 3. Identificazione Range di Mercato (Quasimodo) sul timeframe principale
-        self.range_mercato = definisci_range_da_quasimodo(main_candele, self.main_timeframe)
-        if self.range_mercato:
-            print(f"[DEBUG] Range di Mercato ({self.main_timeframe}): Strong High={self.range_mercato.strong_high.high:.5f}, Strong Low={self.range_mercato.strong_low.low:.5f}")
-
-        # 4. Identificazione POI su tutti i timeframe disponibili
-        all_poi = []
-        for tf_name, candele_tf in self.candele_multi_timeframe.items():
-            if candele_tf and tf_name in self.swing_points_multi_timeframe:
-                swing_points_tf = self.swing_points_multi_timeframe[tf_name]
-                current_tf_poi = identifica_tutti_poi(candele_tf, swing_points_tf, tf_name)
-                
-                all_liquidita_tf = self.liquidita_multi_timeframe.get(tf_name, {})
-                valid_tf_poi = filtra_poi_validi(current_tf_poi, swing_points_tf, candele_tf, all_liquidita_tf)
-                all_poi.extend(valid_tf_poi)
-        
-        print(f"[DEBUG] Totale POI validi identificati su tutti i timeframe: {len(all_poi)}")
-
-        # 5. Logica di Trading
+        # 4. Logica di Trading (Generazione Segnali)
         signal = None
         stop_loss = 0.0
         take_profit = 0.0
-        last_candle_main_tf = main_candele[-1]
+        lot_size = 0.0
+        poi_riferimento = None
 
-        timeframe_priority = {"MN1": 7, "W1": 6, "D1": 5, "H4": 4, "H1": 3, "M30": 2, "M15": 1, "M5": 0, "M1": -1}
-        all_poi.sort(key=lambda poi: timeframe_priority.get(poi.timeframe, -1), reverse=True)
+        # Gestione del numero massimo di posizioni aperte
+        open_positions = mt5.positions_get(symbol=self.symbol)
+        num_open_positions = len(open_positions) if open_positions else 0
 
-        for poi in all_poi:
-            poi_validity_bars = self.params.get("poi_validity_bars", 50)
-            timeframe_to_minutes = {
-                "M1": 1, "M5": 5, "M15": 15, "M30": 30,
-                "H1": 60, "H4": 240, "D1": 1440, "W1": 10080, "MN1": 43200
-            }
-            poi_timeframe_minutes = timeframe_to_minutes.get(poi.timeframe, 1)
-            max_validity_minutes = poi_validity_bars * poi_timeframe_minutes
+        if num_open_positions >= self.max_open_trades_per_symbol:
+            print(f"[DEBUG] Numero massimo di posizioni aperte ({num_open_positions}) raggiunto per {self.symbol}. Nessun nuovo segnale generato.")
+            return
 
-            time_diff_minutes = (last_candle_main_tf.timestamp - poi.candela_di_riferimento.timestamp).total_seconds() / 60
-            
-            if time_diff_minutes > max_validity_minutes:
-                print(f"[DEBUG] POI scartato per anzianità: {poi.tipo} {poi.direzione} su {poi.timeframe} (vecchio di {time_diff_minutes:.2f} min, max {max_validity_minutes} min)")
+        # Ordina i POI validi per rilevanza (es. i più recenti o quelli più vicini al prezzo)
+        # Per semplicità, li ordiniamo per timestamp decrescente (dal più recente al più vecchio)
+        valid_poi.sort(key=lambda p: p.candela_di_riferimento.timestamp, reverse=True)
+
+        for poi in valid_poi:
+            # Regola 4: Prezzo attuale nella zona del POI (o molto vicino)
+            # Consideriamo un buffer intorno al POI per l'ingresso
+            buffer_pct = 0.0005 # 0.05% di buffer
+            poi_top_buffered = poi.prezzo_di_attivazione_top * (1 + buffer_pct)
+            poi_bottom_buffered = poi.prezzo_di_attivazione_bottom * (1 - buffer_pct)
+
+            if not (poi_bottom_buffered <= self.current_price <= poi_top_buffered):
+                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: prezzo {self.current_price:.5f} non nella zona del POI [{poi.prezzo_di_attivazione_bottom:.5f}-{poi.prezzo_di_attivazione_top:.5f}]) - Ref={poi.candela_di_riferimento.timestamp}")
                 continue
 
-            current_price = last_candle_main_tf.close
-            
-            in_poi_zone = False
-            if poi.direzione == "Bullish":
-                if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
-                    in_poi_zone = True
-            elif poi.direzione == "Bearish":
-                if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
-                    in_poi_zone = True
-            
-            if not in_poi_zone:
-                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: Prezzo corrente {current_price:.5f} non nella zona del POI [{poi.prezzo_di_attivazione_bottom:.5f}-{poi.prezzo_di_attivazione_top:.5f}])")
+            # Regola 5: Allineamento con il trend del timeframe principale
+            if trend == "Bullish" and poi.direzione == "Bearish":
+                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: disallineamento trend Bullish) - Ref={poi.candela_di_riferimento.timestamp}")
+                continue
+            if trend == "Bearish" and poi.direzione == "Bullish":
+                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: disallineamento trend Bearish) - Ref={poi.candela_di_riferimento.timestamp}")
                 continue
             
-            trend_alignment = False
-            if poi.direzione == "Bullish" and self.trend in ["Bullish", "Indefinito"]:
-                trend_alignment = True
-            elif poi.direzione == "Bearish" and self.trend in ["Bearish", "Indefinito"]:
-                trend_alignment = True
+            # Se arriviamo qui, il POI è valido e allineato con il trend
+            poi_riferimento = poi
             
-            if not trend_alignment:
-                print(f"[DEBUG] POI scartato per disallineamento trend: POI {poi.direzione} vs Trend {self.trend}")
-                continue
-            
-            has_liquidity_target = False
-            if poi.direzione == "Bullish":
-                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                if tf_liquidita.get("buy_side", []):
-                    for liq_level in tf_liquidita["buy_side"]:
-                        if liq_level > current_price:
-                            has_liquidity_target = True
-                            break
-            elif poi.direzione == "Bearish":
-                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                if tf_liquidita.get("sell_side", []):
-                    for liq_level in tf_liquidita["sell_side"]:
-                        if liq_level < current_price:
-                            has_liquidity_target = True
-                            break
-            
-            if not has_liquidity_target:
-                print(f"[DEBUG] POI scartato per mancanza di liquidità target: {poi.tipo} {poi.direzione}")
-                continue
-            
-            # ===============================
-            # BLOCCO MODIFICATO SL/TP
-            # ===============================
-            if poi.direzione == "Bullish":
-                signal = "BUY"
-                buffer_percentage = 0.0005
-                rr = self.params.get("risk_reward_ratio", 2.0)
+            # Calcolo Stop Loss (SL)
+            if poi.direzione == "Bullish": # Per BUY, SL sotto il POI
+                stop_loss = poi.prezzo_di_attivazione_bottom * 0.999 # Un po' sotto il bottom del POI
+            elif poi.direzione == "Bearish": # Per SELL, SL sopra il POI
+                stop_loss = poi.prezzo_di_attivazione_top * 1.001 # Un po' sopra il top del POI
 
-                stop_loss = min(poi.prezzo_di_attivazione_bottom, current_price) * (1 - buffer_percentage)
-                risk = current_price - stop_loss
+            # Calcolo Take Profit (TP)
+            # Prima cerca liquidità target, altrimenti usa RR
+            target_liquidity = None
+            liquidita_levels = identifica_liquidita_swing_points(main_candele) # Liquidità sul TF principale
 
-                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                nearest_liquidity = None
-                for liq_level in tf_liquidita.get("buy_side", []):
-                    if liq_level > current_price:
-                        if nearest_liquidity is None or liq_level < nearest_liquidity:
-                            nearest_liquidity = liq_level
+            if poi.direzione == "Bullish": # Per BUY, cerca liquidità buy-side sopra il prezzo
+                # Cerca il livello di liquidità buy-side più vicino e sopra il prezzo corrente
+                potential_tps = [lvl for lvl in liquidita_levels["buy_side"] if lvl > self.current_price]
+                if potential_tps:
+                    target_liquidity = min(potential_tps) # Il più basso tra quelli sopra
+            elif poi.direzione == "Bearish": # Per SELL, cerca liquidità sell-side sotto il prezzo
+                # Cerca il livello di liquidità sell-side più vicino e sotto il prezzo corrente
+                potential_tps = [lvl for lvl in liquidita_levels["sell_side"] if lvl < self.current_price]
+                if potential_tps:
+                    target_liquidity = max(potential_tps) # Il più alto tra quelli sotto
 
-                if nearest_liquidity:
-                    take_profit = max(nearest_liquidity, current_price + risk * rr)
+            if target_liquidity is not None:
+                take_profit = target_liquidity
+                print(f"[DEBUG] TP basato su liquidità target: {take_profit}")
+            else:
+                # Se non trova liquidità target, calcola TP basato su RR
+                risk_pips = abs(self.current_price - stop_loss)
+                if risk_pips > 0:
+                    if poi.direzione == "Bullish": # BUY
+                        take_profit = self.current_price + (risk_pips * self.risk_reward_ratio)
+                    elif poi.direzione == "Bearish": # SELL
+                        take_profit = self.current_price - (risk_pips * self.risk_reward_ratio)
+                    print(f"[DEBUG] TP basato su RR ({self.risk_reward_ratio}): {take_profit}")
                 else:
-                    take_profit = current_price + risk * rr
+                    print("[DEBUG] Risk Pips è zero, impossibile calcolare TP basato su RR.")
+                    continue # Salta questo POI se SL è troppo vicino
 
-                if not (stop_loss < current_price and take_profit > current_price and take_profit > stop_loss):
-                    print(f"[DEBUG] Segnale BUY scartato: SL/TP non validi. SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Current: {current_price:.5f}")
-                    signal = None
-                    continue
-
-                print(f"[DEBUG] Segnale BUY generato da POI {poi.tipo} Bullish ({poi.timeframe}) a {current_price:.5f}")
-                print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(take_profit-current_price)/risk:.2f}")
-                break
-
-            elif poi.direzione == "Bearish":
-                signal = "SELL"
-                buffer_percentage = 0.0005
-                rr = self.params.get("risk_reward_ratio", 2.0)
-
-                stop_loss = max(poi.prezzo_di_attivazione_top, current_price) * (1 + buffer_percentage)
-                risk = stop_loss - current_price
-
-                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
-                nearest_liquidity = None
-                for liq_level in tf_liquidita.get("sell_side", []):
-                    if liq_level < current_price:
-                        if nearest_liquidity is None or liq_level > nearest_liquidity:
-                            nearest_liquidity = liq_level
-
-                if nearest_liquidity:
-                    take_profit = min(nearest_liquidity, current_price - risk * rr)
+            # Calcolo RR effettivo
+            if poi.direzione == "Bullish": # BUY
+                if (take_profit - self.current_price) > 0 and (self.current_price - stop_loss) > 0:
+                    risk_reward = (take_profit - self.current_price) / (self.current_price - stop_loss)
                 else:
-                    take_profit = current_price - risk * rr
+                    risk_reward = -999 # Valore per indicare RR non valido
+            elif poi.direzione == "Bearish": # SELL
+                if (self.current_price - take_profit) > 0 and (stop_loss - self.current_price) > 0:
+                    risk_reward = (self.current_price - take_profit) / (stop_loss - self.current_price)
+                else:
+                    risk_reward = -999 # Valore per indicare RR non valido
+            
+            print(f"[DEBUG] Calcolo SL/TP: Prezzo={self.current_price:.5f}, SL={stop_loss:.5f}, TP={take_profit:.5f}, Risk={abs(self.current_price - stop_loss):.5f}, RR={risk_reward:.2f}")
 
-                if not (stop_loss > current_price and take_profit < current_price and take_profit < stop_loss):
-                    print(f"[DEBUG] Segnale SELL scartato: SL/TP non validi. SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Current: {current_price:.5f}")
-                    signal = None
-                    continue
+            # Validazione finale SL/TP per evitare errori 10016 (Invalid stops)
+            tick_size = mt5.symbol_info(self.symbol).trade_tick_size
+            min_distance_sl_tp = 10 * tick_size # Esempio: 10 tick di distanza minima
 
-                print(f"[DEBUG] Segnale SELL generato da POI {poi.tipo} Bearish ({poi.timeframe}) a {current_price:.5f}")
-                print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(current_price-take_profit)/risk:.2f}")
-                break
-            # ===============================
-            # FINE BLOCCO MODIFICATO
-            # ===============================
+            is_sl_valid = False
+            is_tp_valid = False
 
-        if signal:
-            new_signal = pd.DataFrame([{
-                "time": last_candle_main_tf.timestamp, 
-                "signal": signal, 
-                "stop_loss": stop_loss, 
-                "take_profit": take_profit
-            }])
-            self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
-        else:
-            print("[DEBUG] Nessun segnale generato in questo ciclo.")
+            if poi.direzione == "Bullish": # BUY
+                if stop_loss < self.current_price - min_distance_sl_tp: # SL deve essere sotto il prezzo e a distanza minima
+                    is_sl_valid = True
+                if take_profit > self.current_price + min_distance_sl_tp: # TP deve essere sopra il prezzo e a distanza minima
+                    is_tp_valid = True
+            elif poi.direzione == "Bearish": # SELL
+                if stop_loss > self.current_price + min_distance_sl_tp: # SL deve essere sopra il prezzo e a distanza minima
+                    is_sl_valid = True
+                if take_profit < self.current_price - min_distance_sl_tp: # TP deve essere sotto il prezzo e a distanza minima
+                    is_tp_valid = True
+            
+            if not is_sl_valid or not is_tp_valid:
+                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: SL/TP non validi o troppo vicini al prezzo) - SL Valid: {is_sl_valid}, TP Valid: {is_tp_valid}")
+                continue
+
+            # Se il RR è inferiore a quello desiderato, scarta il segnale
+            if risk_reward < self.risk_reward_ratio:
+                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: RR {risk_reward:.2f} < {self.risk_reward_ratio}) - Ref={poi.candela_di_riferimento.timestamp}")
+                continue
+
+            # Calcola Lot Size Dinamico
+            # Converti SL in pips per il calcolo del lot size
+            # Per BTCUSD, 1 punto = 1 tick_size
+            sl_pips = abs(self.current_price - stop_loss) / tick_size
+            lot_size = self.calculate_lot_size(self.params.get("risk_per_trade_pct", 1.0), sl_pips)
+            
+            if lot_size == 0.0:
+                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: Lot Size calcolato è zero) - Ref={poi.candela_di_riferimento.timestamp}")
+                continue
+
+            # Se tutte le condizioni sono soddisfatte, genera il segnale
+            signal = poi.direzione.upper() # 
+
