@@ -4,11 +4,15 @@ import pandas as pd
 import MetaTrader5 as mt5
 from datetime import datetime, timedelta, timezone
 from src.strategy2 import TradingStrategy
+import os # Importa il modulo os
 
 # -----------------------------
 # Leggi config
 # -----------------------------
-with open("config/config.json", "r") as f:
+config_path = "config/config.json"
+print(f"[DEBUG] Tentativo di aprire config.json da: {os.path.abspath(config_path)}")
+
+with open(config_path, "r") as f:
     config = json.load(f)
 
 broker = config["broker"]
@@ -33,11 +37,11 @@ TIMEFRAME_MAP = {
     "MN1": mt5.TIMEFRAME_MN1
 }
 
-# Timeframe principale per l\'esecuzione del bot
+# Timeframe principale per l\"esecuzione del bot
 MAIN_TIMEFRAME_STR = trading["timeframe"] # Usiamo la stringa direttamente
 MAIN_TIMEFRAME_MT5 = TIMEFRAME_MAP.get(MAIN_TIMEFRAME_STR, mt5.TIMEFRAME_M1)
 
-# Timeframe aggiuntivi per l\'analisi multi-timeframe (HTF e LTF)
+# Timeframe aggiuntivi per l\"analisi multi-timeframe (HTF e LTF)
 # Questi dovrebbero essere configurabili nel config.json
 # Per ora, li hardcodiamo per dimostrazione
 ADDITIONAL_TIMEFRAMES_STR = [
@@ -77,7 +81,7 @@ def get_ohlcv_multi_timeframe(symbol, timeframes_str: list, n=200):
             data[tf_name] = pd.DataFrame() # Ritorna un DataFrame vuoto in caso di errore
             continue
         df = pd.DataFrame(rates)
-        df["time"] = pd.to_datetime(df["time"], unit='s')
+        df["time"] = pd.to_datetime(df["time"], unit=\'s\')
         data[tf_name] = df
     return data
 
@@ -115,9 +119,19 @@ def send_order(symbol, action, lot, stop_loss=0.0, take_profit=0.0):
     if take_profit > 0:
         request["tp"] = take_profit
 
+    print(f"[DEBUG] Richiesta ordine: {request}") # Debug: stampa la richiesta
+
     result = mt5.order_send(request)
+    
+    if result is None: # Aggiunto controllo per NoneType
+        print(f"Errore: mt5.order_send() ha restituito None. Controllare la connessione MT5 o i parametri dell'ordine. Ultimo errore MT5: {mt5.last_error()}")
+        return False
+
     if result.retcode != mt5.TRADE_RETCODE_DONE:
         print(f"Errore ordine: {result.comment} ({result.retcode})")
+        # Debug aggiuntivo per errori specifici
+        if result.retcode == 10016: # Invalid stops
+            print(f"  Dettagli Invalid Stops: SL={request.get('sl')}, TP={request.get('tp')}, Price={request.get('price')}")
         return False
     print(f"Ordine eseguito: {action} {lot} {symbol} @ {price} (SL: {stop_loss}, TP: {take_profit})")
     return True
@@ -127,15 +141,15 @@ def send_order(symbol, action, lot, stop_loss=0.0, take_profit=0.0):
 # -----------------------------
 def seconds_to_next_candle(timeframe: str):
     now = datetime.now(timezone.utc)
-    if timeframe.startswith('M'):
+    if timeframe.startswith(\'M\'):
         minutes = int(timeframe[1:])
         delta = timedelta(minutes=minutes)
-        # Calcola l\'inizio della candela corrente
+        # Calcola l\"inizio della candela corrente
         candle_start = now.replace(second=0, microsecond=0) - timedelta(minutes=now.minute % minutes)
-    elif timeframe.startswith('H'):
+    elif timeframe.startswith(\'H\'):
         hours = int(timeframe[1:])
         delta = timedelta(hours=hours)
-        # Calcola l\'inizio della candela corrente
+        # Calcola l\"inizio della candela corrente
         candle_start = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=now.hour % hours)
     else:
         raise ValueError("Timeframe non supportato")
@@ -162,7 +176,7 @@ while True:
         strat = TradingStrategy(SYMBOL, MAIN_TIMEFRAME_STR, ohlcv_data, params=strategy_params)
         strat.generate_signals()
         
-        # Recupera il segnale dall\'ultima riga del DataFrame dei segnali
+        # Recupera il segnale dall\"ultima riga del DataFrame dei segnali
         signal_data = strat.signals.iloc[-1] if not strat.signals.empty else None
         signal = signal_data["signal"] if signal_data is not None else None
         stop_loss = signal_data["stop_loss"] if signal_data is not None and "stop_loss" in signal_data else 0.0
@@ -179,4 +193,3 @@ while True:
         print(f"Errore nel loop principale: {e}")
 
     time.sleep(DELAY)
-
