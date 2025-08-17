@@ -33,19 +33,20 @@ TIMEFRAME_MAP = {
     "MN1": mt5.TIMEFRAME_MN1
 }
 
-# Timeframe principale per l'esecuzione del bot
-MAIN_TIMEFRAME = TIMEFRAME_MAP.get(trading["timeframe"], mt5.TIMEFRAME_M1)
+# Timeframe principale per l\'esecuzione del bot
+MAIN_TIMEFRAME_STR = trading["timeframe"] # Usiamo la stringa direttamente
+MAIN_TIMEFRAME_MT5 = TIMEFRAME_MAP.get(MAIN_TIMEFRAME_STR, mt5.TIMEFRAME_M1)
 
-# Timeframe aggiuntivi per l'analisi multi-timeframe (HTF e LTF)
+# Timeframe aggiuntivi per l\'analisi multi-timeframe (HTF e LTF)
 # Questi dovrebbero essere configurabili nel config.json
 # Per ora, li hardcodiamo per dimostrazione
-ADDITIONAL_TIMEFRAMES = [
-    TIMEFRAME_MAP.get("H4"), # Esempio di Higher Timeframe
-    TIMEFRAME_MAP.get("M5")  # Esempio di Lower Timeframe
+ADDITIONAL_TIMEFRAMES_STR = [
+    "H4", # Esempio di Higher Timeframe
+    "M5"  # Esempio di Lower Timeframe
 ]
 
 # Filtra i timeframe validi e rimuovi duplicati
-ALL_TIMEFRAMES = list(set([MAIN_TIMEFRAME] + [tf for tf in ADDITIONAL_TIMEFRAMES if tf is not None]))
+ALL_TIMEFRAMES_STR = list(set([MAIN_TIMEFRAME_STR] + [tf for tf in ADDITIONAL_TIMEFRAMES_STR if tf is not None]))
 
 LOT_SIZE = 0.1 # Placeholder, da calcolare dinamicamente in base a risk_per_trade_pct e SL
 DELAY = trading.get("poll_seconds", 10)
@@ -62,11 +63,14 @@ print(f"MT5 inizializzato ({broker["mode"]})!")
 # -----------------------------
 # Funzione per leggere OHLCV live per più timeframe
 # -----------------------------
-def get_ohlcv_multi_timeframe(symbol, timeframes: list, n=200):
+def get_ohlcv_multi_timeframe(symbol, timeframes_str: list, n=200):
     data = {}
-    for tf_mt5 in timeframes:
-        # Trova il nome stringa del timeframe dalla mappa per il logging
-        tf_name = next((name for name, value in TIMEFRAME_MAP.items() if value == tf_mt5), str(tf_mt5))
+    for tf_name in timeframes_str:
+        tf_mt5 = TIMEFRAME_MAP.get(tf_name)
+        if tf_mt5 is None:
+            print(f"Errore: Timeframe {tf_name} non riconosciuto.")
+            continue
+
         rates = mt5.copy_rates_from_pos(symbol, tf_mt5, 0, n)
         if rates is None:
             print(f"Errore nel recupero dati OHLCV per {symbol} {tf_name}: {mt5.last_error()}")
@@ -126,12 +130,12 @@ def seconds_to_next_candle(timeframe: str):
     if timeframe.startswith(\'M\'):
         minutes = int(timeframe[1:])
         delta = timedelta(minutes=minutes)
-        # Calcola l'inizio della candela corrente
+        # Calcola l\'inizio della candela corrente
         candle_start = now.replace(second=0, microsecond=0) - timedelta(minutes=now.minute % minutes)
     elif timeframe.startswith(\'H\'):
         hours = int(timeframe[1:])
         delta = timedelta(hours=hours)
-        # Calcola l'inizio della candela corrente
+        # Calcola l\'inizio della candela corrente
         candle_start = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=now.hour % hours)
     else:
         raise ValueError("Timeframe non supportato")
@@ -146,21 +150,19 @@ def seconds_to_next_candle(timeframe: str):
 while True:
     try:
         # Recupera i dati OHLCV per tutti i timeframe necessari
-        ohlcv_data = get_ohlcv_multi_timeframe(SYMBOL, ALL_TIMEFRAMES)
+        ohlcv_data = get_ohlcv_multi_timeframe(SYMBOL, ALL_TIMEFRAMES_STR)
 
         # Assicurati che il timeframe principale abbia dati validi
-        main_tf_name = next((name for name, value in TIMEFRAME_MAP.items() if value == MAIN_TIMEFRAME), str(MAIN_TIMEFRAME))
-        if main_tf_name not in ohlcv_data or ohlcv_data[main_tf_name].empty:
-            print(f"Errore: Dati OHLCV non disponibili per il timeframe principale {main_tf_name}. Riprovo...")
+        if MAIN_TIMEFRAME_STR not in ohlcv_data or ohlcv_data[MAIN_TIMEFRAME_STR].empty:
+            print(f"Errore: Dati OHLCV non disponibili per il timeframe principale {MAIN_TIMEFRAME_STR}. Riprovo...")
             time.sleep(DELAY)
             continue
 
         # Inizializza la strategia con i parametri e i dati OHLCV per tutti i timeframe
-        # La classe TradingStrategy dovrà essere aggiornata per accettare multi-timeframe data
-        strat = TradingStrategy(SYMBOL, MAIN_TIMEFRAME, ohlcv_data, params=strategy_params)
+        strat = TradingStrategy(SYMBOL, MAIN_TIMEFRAME_STR, ohlcv_data, params=strategy_params)
         strat.generate_signals()
         
-        # Recupera il segnale dall'ultima riga del DataFrame dei segnali
+        # Recupera il segnale dall\'ultima riga del DataFrame dei segnali
         signal_data = strat.signals.iloc[-1] if not strat.signals.empty else None
         signal = signal_data["signal"] if signal_data is not None else None
         stop_loss = signal_data["stop_loss"] if signal_data is not None and "stop_loss" in signal_data else 0.0
