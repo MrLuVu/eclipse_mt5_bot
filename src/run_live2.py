@@ -77,7 +77,7 @@ def get_ohlcv_multi_timeframe(symbol, timeframes_str: list, n=200):
             data[tf_name] = pd.DataFrame() # Ritorna un DataFrame vuoto in caso di errore
             continue
         df = pd.DataFrame(rates)
-        df["time"] = pd.to_datetime(df["time"], unit=\'s\')
+        df["time"] = pd.to_datetime(df["time"], unit='s')
         data[tf_name] = df
     return data
 
@@ -127,12 +127,12 @@ def send_order(symbol, action, lot, stop_loss=0.0, take_profit=0.0):
 # -----------------------------
 def seconds_to_next_candle(timeframe: str):
     now = datetime.now(timezone.utc)
-    if timeframe.startswith(\'M\'):
+    if timeframe.startswith('M'):
         minutes = int(timeframe[1:])
         delta = timedelta(minutes=minutes)
         # Calcola l\'inizio della candela corrente
         candle_start = now.replace(second=0, microsecond=0) - timedelta(minutes=now.minute % minutes)
-    elif timeframe.startswith(\'H\'):
+    elif timeframe.startswith('H'):
         hours = int(timeframe[1:])
         delta = timedelta(hours=hours)
         # Calcola l\'inizio della candela corrente
@@ -179,5 +179,4 @@ while True:
         print(f"Errore nel loop principale: {e}")
 
     time.sleep(DELAY)
-
 
