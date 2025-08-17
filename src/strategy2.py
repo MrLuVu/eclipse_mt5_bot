@@ -378,7 +378,7 @@ def identifica_asian_session_liquidity(candele: List[Candela], session_asian_sta
     """
     # Inizializza con valori float validi, non con np.inf o -np.inf che possono causare problemi di tipo
     asian_session_high = -1.0  # Un valore basso iniziale per il massimo
-    asian_session_low = float('inf') # Un valore alto iniziale per il minimo
+    asian_session_low = float("inf") # Un valore alto iniziale per il minimo
     
     # Trova le candele che rientrano nella sessione asiatica
     # La sessione asiatica può estendersi a cavallo della mezzanotte
@@ -781,6 +781,8 @@ class TradingStrategy:
                 # Trova il livello di liquidità più vicino come primo target
                 tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
                 nearest_liquidity = None
+                # Per un TP BUY, vogliamo un livello di liquidità più alto del prezzo corrente
+                # e il più vicino possibile (quindi il più basso tra quelli più alti)
                 for liq_level in tf_liquidita.get("buy_side", []):
                     if liq_level > current_price:
                         if nearest_liquidity is None or liq_level < nearest_liquidity:
@@ -788,7 +790,7 @@ class TradingStrategy:
                 
                 if nearest_liquidity:
                     # TP basato sulla liquidità più vicina
-                    take_profit = nearest_liquidity * 0.999  # Leggermente sotto la liquidità
+                    take_profit = nearest_liquidity * 0.999  # Leggermente sotto la liquidità per essere raggiunto
                 else:
                     # TP basato sul risk/reward ratio se non c\"è liquidità vicina
                     take_profit = current_price + (risk * self.params.get("risk_reward_ratio", 2.0))
@@ -811,16 +813,16 @@ class TradingStrategy:
                 # Trova il livello di liquidità più vicino come primo target
                 tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
                 nearest_liquidity = None
+                # Per un TP SELL, vogliamo un livello di liquidità più basso del prezzo corrente
+                # e il più vicino possibile (quindi il più alto tra quelli più bassi)
                 for liq_level in tf_liquidita.get("sell_side", []):
                     if liq_level < current_price:
-                        # Per un TP SELL, vogliamo un livello di liquidità più basso del prezzo corrente
-                        # e il più vicino possibile (quindi il più alto tra quelli più bassi)
                         if nearest_liquidity is None or liq_level > nearest_liquidity:
                             nearest_liquidity = liq_level
                 
                 if nearest_liquidity:
                     # TP basato sulla liquidità più vicina
-                    take_profit = nearest_liquidity * 1.001  # Leggermente sopra la liquidità
+                    take_profit = nearest_liquidity * 1.001  # Leggermente sopra la liquidità per essere raggiunto
                 else:
                     # TP basato sul risk/reward ratio se non c\"è liquidità vicina
                     take_profit = current_price - (risk * self.params.get("risk_reward_ratio", 2.0))
