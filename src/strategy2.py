@@ -441,8 +441,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
-                                    'low': candela_prec.low, 'close': candela_prec.close},
+                    key_level_ohlc={"open": candela_prec.open, "high": candela_prec.high,
+                                    "low": candela_prec.low, "close": candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -461,8 +461,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
-                                    'low': candela_prec.low, 'close': candela_prec.close},
+                    key_level_ohlc={"open": candela_prec.open, "high": candela_prec.high,
+                                    "low": candela_prec.low, "close": candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -559,8 +559,10 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], cand
             if poi.direzione == "Bearish":
                 # Per un POI bearish, è mitigato se il prezzo torna sopra il top
                 # Consideriamo mitigato se il close della candela successiva è >= top del POI
-                # Aggiungo una piccola tolleranza per evitare falsi positivi su mitigazione
-                if candela.close >= poi.prezzo_di_attivazione_top * 1.0001: # 0.01% di tolleranza
+                # Rilassamento: il prezzo deve chiudere *significativamente* oltre il POI per essere mitigato
+                # Usiamo una percentuale maggiore, ad esempio 0.1% o 0.2% oltre il bordo
+                mitigation_threshold = poi.prezzo_di_attivazione_top * 1.002 # 0.2% oltre il top
+                if candela.close >= mitigation_threshold:
                     is_mitigated = True
                     poi.e_mitigato = True
                     reason_discarded.append("mitigato (prezzo tornato sopra il top)")
@@ -568,8 +570,9 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], cand
             elif poi.direzione == "Bullish":
                 # Per un POI bullish, è mitigato se il prezzo torna sotto il bottom
                 # Consideriamo mitigato se il close della candela successiva è <= bottom del POI
-                # Aggiungo una piccola tolleranza per evitare falsi positivi su mitigazione
-                if candela.close <= poi.prezzo_di_attivazione_bottom * 0.9999: # 0.01% di tolleranza
+                # Rilassamento: il prezzo deve chiudere *significativamente* oltre il POI per essere mitigato
+                mitigation_threshold = poi.prezzo_di_attivazione_bottom * 0.998 # 0.2% sotto il bottom
+                if candela.close <= mitigation_threshold:
                     is_mitigated = True
                     poi.e_mitigato = True
                     reason_discarded.append("mitigato (prezzo tornato sotto il bottom)")
