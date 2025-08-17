@@ -376,8 +376,9 @@ def identifica_asian_session_liquidity(candele: List[Candela], session_asian_sta
     Identifica i massimi e minimi della sessione asiatica.
     Assume che le candele siano ordinate per timestamp.
     """
-    asian_session_high = -1.0 # Inizializza con un valore float valido
-    asian_session_low = float('inf') # Inizializza con un valore float valido
+    # Inizializza con valori float validi, non con np.inf o -np.inf che possono causare problemi di tipo
+    asian_session_high = -1.0  # Un valore basso iniziale per il massimo
+    asian_session_low = float('inf') # Un valore alto iniziale per il minimo
     
     # Trova le candele che rientrano nella sessione asiatica
     # La sessione asiatica può estendersi a cavallo della mezzanotte
@@ -395,11 +396,12 @@ def identifica_asian_session_liquidity(candele: List[Candela], session_asian_sta
                 
     if not asian_candele:
         print(f"[DEBUG] Nessuna candela trovata per la sessione asiatica su {timeframe}")
+        # Restituisci valori che indicano l'assenza di dati validi
         return {"high": 0.0, "low": 0.0}
 
-    for candela in asian_candele:
-        asian_session_high = max(asian_session_high, candela.high)
-        asian_session_low = min(asian_session_low, candela.low)
+    # Aggiorna i valori solo se ci sono candele nella sessione asiatica
+    asian_session_high = max(c.high for c in asian_candele)
+    asian_session_low = min(c.low for c in asian_candele)
         
     print(f"[DEBUG] Identificata liquidità sessione asiatica su {timeframe}: High={asian_session_high:.5f}, Low={asian_session_low:.5f}")
     return {"high": asian_session_high, "low": asian_session_low}
@@ -811,6 +813,8 @@ class TradingStrategy:
                 nearest_liquidity = None
                 for liq_level in tf_liquidita.get("sell_side", []):
                     if liq_level < current_price:
+                        # Per un TP SELL, vogliamo un livello di liquidità più basso del prezzo corrente
+                        # e il più vicino possibile (quindi il più alto tra quelli più bassi)
                         if nearest_liquidity is None or liq_level > nearest_liquidity:
                             nearest_liquidity = liq_level
                 
@@ -835,3 +839,4 @@ class TradingStrategy:
             self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
         else:
             print("[DEBUG] Nessun segnale generato in questo ciclo.")
+
