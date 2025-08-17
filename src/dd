@@ -1,33 +1,50 @@
-QM Rialzista (Strong Low) trovato a: 117915.75 in data 2025-08-17 10:05:00
-Range valido definito su M1: Low a 117915.75, High a 118054.88
-[DEBUG] Range di Mercato (M1): Strong High=118054.88000, Strong Low=117915.75000
-Identifica_Poi timeframe: M1  | Candele: 200  | Swing Points: 88
-[DEBUG] Identificati 54 POI su timeframe M1
-  Orderblock Bullish | Top=117915.38000 | Bottom=117907.13000 | Ref=2025-08-17 07:47:00
-  Orderblock Bearish | Top=118221.88000 | Bottom=118218.25000 | Ref=2025-08-17 07:54:00
-  Orderblock Bullish | Top=118157.00000 | Bottom=118138.88000 | Ref=2025-08-17 07:57:00
-[DEBUG] POI validi dopo filtraggio: 5/54
-Identifica_Poi timeframe: M5  | Candele: 200  | Swing Points: 95
-[DEBUG] Identificati 82 POI su timeframe M5
-  Orderblock Bearish | Top=117855.88000 | Bottom=117835.38000 | Ref=2025-08-16 18:25:00
-  Orderblock Bearish | Top=117882.88000 | Bottom=117847.00000 | Ref=2025-08-16 19:15:00
-  Orderblock Bullish | Top=117884.25000 | Bottom=117825.50000 | Ref=2025-08-16 19:20:00
-[DEBUG] POI validi dopo filtraggio: 3/82
+[DEBUG] Analisi su timeframe principale: M1 con 200 candele
+[DEBUG] Identificati 82 swing points su H4
+[DEBUG] Liquidità identificata - Buy Side: 42, Sell Side: 40)
+[DEBUG] Identificati 44 Equal Highs e 47 Equal Lows su H4
+[DEBUG] Identificati 48 Trendline Buy Side e 61 Trendline Sell Side su H4
+[DEBUG] Identificata liquidità sessione asiatica su H4: High=124561.75000, Low=111880.50000
+[DEBUG] Identificati 80 swing points su M1
+[DEBUG] Liquidità identificata - Buy Side: 39, Sell Side: 41)
+[DEBUG] Identificati 26 Equal Highs e 23 Equal Lows su M1
+[DEBUG] Identificati 57 Trendline Buy Side e 68 Trendline Sell Side su M1
+[DEBUG] Nessuna candela trovata per la sessione asiatica su M1
+[DEBUG] Identificati 94 swing points su M5
+[DEBUG] Liquidità identificata - Buy Side: 46, Sell Side: 48)
+[DEBUG] Identificati 42 Equal Highs e 45 Equal Lows su M5
+[DEBUG] Identificati 43 Trendline Buy Side e 49 Trendline Sell Side su M5
+[DEBUG] Identificata liquidità sessione asiatica su M5: High=117793.63000, Low=117262.50000
+[DEBUG] Trend: Indefinito, BOS High: None, BOS Low: None
+[DEBUG] Trend attuale (M1): Indefinito
+Avvio identificazione Range su timeframe M1...
+[DEBUG] Identificati 80 swing points su M1
+QM Ribassista (Strong High) trovato a: 118499.0 in data 2025-08-17 12:00:00
+QM Rialzista (Strong Low) trovato a: 118182.63 in data 2025-08-17 11:47:00
+Range valido definito su M1: Low a 118182.63, High a 118499.0
+[DEBUG] Range di Mercato (M1): Strong High=118499.00000, Strong Low=118182.63000
 Identifica_Poi timeframe: H4  | Candele: 200  | Swing Points: 82
 [DEBUG] Identificati 65 POI su timeframe H4
   Orderblock Bullish | Top=117810.10000 | Bottom=116782.86000 | Ref=2025-07-15 08:00:00
   Orderblock Bearish | Top=117213.64000 | Bottom=116326.61000 | Ref=2025-07-15 12:00:00
   Orderblock Bullish | Top=117555.38000 | Bottom=116548.13000 | Ref=2025-07-15 20:00:00
 [DEBUG] POI validi dopo filtraggio: 0/65
-[DEBUG] Totale POI validi identificati su tutti i timeframe: 8
-[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 411.00 min, max 250 min)
-[DEBUG] POI scartato per anzianità: Orderblock Bullish su M5 (vecchio di 346.00 min, max 250 min)
-[DEBUG] POI scartato per anzianità: Orderblock Bearish su M1 (vecchio di 173.00 min, max 50 min)
-[DEBUG] POI scartato per anzianità: Inefficiency Bearish su M1 (vecchio di 96.00 min, max 50 min)
-[DEBUG] POI scartato per anzianità: Orderblock Bullish su M1 (vecchio di 61.00 min, max 50 min)
-[DEBUG] Segnale BUY generato da POI Inefficiency Bullish (M1) a 118090.38000
-[DEBUG] SL: 118021.58969, TP: 117975.28662, Risk: 68.79031, RR: -1.67
-C:\Users\luigi\Desktop\eclipse_mt5_bot\src\strategy2.py:839: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+Identifica_Poi timeframe: M1  | Candele: 200  | Swing Points: 80
+[DEBUG] Identificati 52 POI su timeframe M1
+  Inefficiency Bearish | Top=118166.75000 | Bottom=118119.38000 | Ref=2025-08-17 09:30:00
+  Orderblock Bullish | Top=118035.38000 | Bottom=117996.50000 | Ref=2025-08-17 09:38:00
+  Orderblock Bullish | Top=118060.63000 | Bottom=118059.63000 | Ref=2025-08-17 09:43:00
+[DEBUG] POI validi dopo filtraggio: 4/52
+Identifica_Poi timeframe: M5  | Candele: 200  | Swing Points: 94
+[DEBUG] Identificati 81 POI su timeframe M5
+  Orderblock Bearish | Top=117826.75000 | Bottom=117792.25000 | Ref=2025-08-16 20:05:00
+  Orderblock Bullish | Top=117783.25000 | Bottom=117758.00000 | Ref=2025-08-16 20:15:00
+[DEBUG] Segnale BUY generato da POI Orderblock Bullish (M1) a 118343.50000
+[DEBUG] SL: 118258.72106, TP: 118225.90575, Risk: 84.77894, RR: -1.39
+C:\Users\luigi\Desktop\eclipse_mt5_bot\src\strategy2.py:841: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
   self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
 Errore ordine: Invalid stops (10016)
 Traceback (most recent call last):
+  File "C:\Users\luigi\Desktop\eclipse_mt5_bot\run_live2.py", line 181, in <module>
+    time.sleep(DELAY)
+    ~~~~~~~~~~^^^^^^^
+KeyboardInterrupt
