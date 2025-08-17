@@ -17,6 +17,15 @@ class Candela:
     low: float
     close: float
 
+    def __eq__(self, other):
+        if not isinstance(other, Candela):
+            return NotImplemented
+        return self.timestamp == other.timestamp and \
+               self.open == other.open and \
+               self.high == other.high and \
+               self.low == other.low and \
+               self.close == other.close
+
 
 @dataclass
 class SwingPoint:
