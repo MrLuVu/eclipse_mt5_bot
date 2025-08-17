@@ -218,7 +218,8 @@ def identifica_liquidita_swing_points(swing_points: List[SwingPoint]) -> Dict[st
             # Sell Side Liquidity sotto il swing low
             liquidita["sell_side"].append(sp.candela.low)
     
-    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})")
+    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})
+")
     return liquidita
 
 def trova_ultimo_low_prima_di(timestamp, lista_lows):
@@ -440,8 +441,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
-                                    'low': candela_prec.low, 'close': candela_prec.close},
+                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
+                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -460,8 +461,8 @@ def identifica_tutti_poi(candele: List[Candela], swing_points: List[SwingPoint],
                     candela_di_riferimento=candela_prec,
                     prezzo_di_attivazione_top=poi_top,
                     prezzo_di_attivazione_bottom=poi_bottom,
-                    key_level_ohlc={'open': candela_prec.open, 'high': candela_prec.high,
-                                    'low': candela_prec.low, 'close': candela_prec.close},
+                    key_level_ohlc={\'open\': candela_prec.open, \'high\': candela_prec.high,
+                                    \'low\': candela_prec.low, \'close\': candela_prec.close},
                     timeframe=timeframe,
                     swing_point_origine=swing_point_associato
                 ))
@@ -519,6 +520,7 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], cand
     for poi in lista_poi:
         has_taken_liquidity = False
         is_mitigated = False
+        reason_discarded = []
 
         # REGOLA 2: Deve aver "preso" liquidità
         # Verifica se il POI è associato a un movimento che ha rotto liquidità
@@ -535,6 +537,9 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], cand
                 if poi.candela_di_riferimento.low < liq_level:
                     has_taken_liquidity = True
                     break
+        
+        if not has_taken_liquidity:
+            reason_discarded.append("non ha preso liquidità")
 
         # REGOLA 3: Non deve essere mitigato
         # Verifica se il prezzo è tornato nella zona del POI dopo la sua formazione
@@ -547,17 +552,21 @@ def filtra_poi_validi(lista_poi: List[POI], swing_points: List[SwingPoint], cand
                 if candela.high >= poi.prezzo_di_attivazione_top:
                     is_mitigated = True
                     poi.e_mitigato = True
+                    reason_discarded.append("mitigato (prezzo tornato sopra il top)")
                     break
             elif poi.direzione == "Bullish":
                 # Per un POI bullish, è mitigato se il prezzo torna sotto il bottom
                 if candela.low <= poi.prezzo_di_attivazione_bottom:
                     is_mitigated = True
                     poi.e_mitigato = True
+                    reason_discarded.append("mitigato (prezzo tornato sotto il bottom)")
                     break
 
         # Aggiungi il POI solo se ha preso liquidità e non è mitigato
         if has_taken_liquidity and not is_mitigated:
             poi_validi.append(poi)
+        else:
+            print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: {', '.join(reason_discarded)}) - Ref={poi.candela_di_riferimento.timestamp}")
 
     print(f"[DEBUG] POI validi dopo filtraggio: {len(poi_validi)}/{len(lista_poi)}")
     return poi_validi
@@ -724,6 +733,7 @@ class TradingStrategy:
                     in_poi_zone = True
             
             if not in_poi_zone:
+                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: Prezzo corrente {current_price:.5f} non nella zona del POI [{poi.prezzo_di_attivazione_bottom:.5f}-{poi.prezzo_di_attivazione_top:.5f}])")
                 continue
             
             # Verifica la confluenza con il trend del timeframe principale
@@ -755,7 +765,7 @@ class TradingStrategy:
                 tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
                 if tf_liquidita.get("sell_side", []):
                     # Verifica se c\"è liquidità sotto il prezzo corrente
-                    for liq_level in tf_liquidita["sell_side"]:
+                    for liq_level in tf_liquidita["sell_level"]:
                         if liq_level < current_price:
                             has_liquidity_target = True
                             break
