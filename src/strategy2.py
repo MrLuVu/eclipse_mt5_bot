@@ -376,8 +376,8 @@ def identifica_asian_session_liquidity(candele: List[Candela], session_asian_sta
     Identifica i massimi e minimi della sessione asiatica.
     Assume che le candele siano ordinate per timestamp.
     """
-    asian_session_high = -np.inf
-    asian_session_low = np.inf
+    asian_session_high = -1.0 # Inizializza con un valore float valido
+    asian_session_low = float('inf') # Inizializza con un valore float valido
     
     # Trova le candele che rientrano nella sessione asiatica
     # La sessione asiatica può estendersi a cavallo della mezzanotte
@@ -835,4 +835,3 @@ class TradingStrategy:
             self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
         else:
             print("[DEBUG] Nessun segnale generato in questo ciclo.")
-
