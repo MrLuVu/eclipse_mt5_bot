@@ -218,8 +218,7 @@ def identifica_liquidita_swing_points(swing_points: List[SwingPoint]) -> Dict[st
             # Sell Side Liquidity sotto il swing low
             liquidita["sell_side"].append(sp.candela.low)
     
-    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})
-")
+    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})")
     return liquidita
 
 def trova_ultimo_low_prima_di(timestamp, lista_lows):
@@ -625,7 +624,7 @@ class TradingStrategy:
             ))
         return candele
 
-    def generate_signals(self):
+    """def generate_signals(self):
         # Ottieni le candele per il timeframe principale
         main_candele = self.candele_multi_timeframe.get(self.main_timeframe)
         if not main_candele:
@@ -880,6 +879,225 @@ class TradingStrategy:
                 print(f"[DEBUG] Segnale SELL generato da POI {poi.tipo} Bearish ({poi.timeframe}) a {current_price:.5f}")
                 print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(current_price-take_profit)/risk:.2f}")
                 break
+
+        if signal:
+            new_signal = pd.DataFrame([{
+                "time": last_candle_main_tf.timestamp, 
+                "signal": signal, 
+                "stop_loss": stop_loss, 
+                "take_profit": take_profit
+            }])
+            self.signals = pd.concat([self.signals, new_signal], ignore_index=True)
+        else:
+                print("[DEBUG] Nessun segnale generato in questo ciclo.")"""
+    def generate_signals(self):
+        # Ottieni le candele per il timeframe principale
+        main_candele = self.candele_multi_timeframe.get(self.main_timeframe)
+        if not main_candele:
+            print(f"[ERRORE] Dati non disponibili per il timeframe principale: {self.main_timeframe}")
+            return
+
+        print(f"[DEBUG] Analisi su timeframe principale: {self.main_timeframe} con {len(main_candele)} candele")
+
+        # 1. Identificazione Swing Points e Liquidità su tutti i timeframe
+        for tf_name, candele_tf in self.candele_multi_timeframe.items():
+            if candele_tf:
+                swing_period = self.params.get("swing_period", 3)
+                swing_points = identifica_swing_points_frattali(candele_tf, swing_period, tf_name)
+                self.swing_points_multi_timeframe[tf_name] = swing_points
+                
+                # Identifica liquidità per questo timeframe (swing points)
+                liquidita_sp = identifica_liquidita_swing_points(swing_points)
+                
+                # Identifica Massimi/Minimi Uguali
+                equal_levels = identifica_equal_highs_lows(candele_tf, timeframe=tf_name)
+                self.equal_highs_lows_multi_timeframe[tf_name] = equal_levels
+                
+                # Identifica Trendline Liquidity
+                trendline_liq = identifica_trendline_liquidity(candele_tf, tf_name)
+                self.trendline_liquidity_multi_timeframe[tf_name] = trendline_liq
+
+                # Identifica Asian Session Liquidity (solo se i parametri sono disponibili)
+                asian_liq = {"high": 0.0, "low": 0.0}
+                if "session_asian_start" in self.params and "session_asian_end" in self.params:
+                    asian_liq = identifica_asian_session_liquidity(
+                        candele_tf, 
+                        self.params["session_asian_start"],
+                        self.params["session_asian_end"],
+                        tf_name
+                    )
+                self.asian_session_liquidity_multi_timeframe[tf_name] = asian_liq
+
+                # Combina tutte le forme di liquidità identificate per il timeframe
+                combined_liquidita = {
+                    "buy_side": liquidita_sp["buy_side"] + equal_levels["equal_highs"] + trendline_liq["buy_side"],
+                    "sell_side": liquidita_sp["sell_side"] + equal_levels["equal_lows"] + trendline_liq["sell_side"]
+                }
+                if asian_liq["high"] > 0:
+                    combined_liquidita["buy_side"].append(asian_liq["high"])
+                if asian_liq["low"] > 0:
+                    combined_liquidita["sell_side"].append(asian_liq["low"])
+
+                self.liquidita_multi_timeframe[tf_name] = combined_liquidita
+
+        # 2. Analisi Struttura e BOS sul timeframe principale
+        main_swing_points = self.swing_points_multi_timeframe.get(self.main_timeframe, [])
+        if main_swing_points:
+            self.trend, self.ultimo_bos_high, self.ultimo_bos_low, updated_swing_points = analizza_struttura_e_bos_frattale(
+                main_swing_points, self.trend
+            )
+            self.swing_points_multi_timeframe[self.main_timeframe] = updated_swing_points
+            print(f"[DEBUG] Trend attuale ({self.main_timeframe}): {self.trend}")
+
+        # 3. Identificazione Range di Mercato (Quasimodo) sul timeframe principale
+        self.range_mercato = definisci_range_da_quasimodo(main_candele, self.main_timeframe)
+        if self.range_mercato:
+            print(f"[DEBUG] Range di Mercato ({self.main_timeframe}): Strong High={self.range_mercato.strong_high.high:.5f}, Strong Low={self.range_mercato.strong_low.low:.5f}")
+
+        # 4. Identificazione POI su tutti i timeframe disponibili
+        all_poi = []
+        for tf_name, candele_tf in self.candele_multi_timeframe.items():
+            if candele_tf and tf_name in self.swing_points_multi_timeframe:
+                swing_points_tf = self.swing_points_multi_timeframe[tf_name]
+                current_tf_poi = identifica_tutti_poi(candele_tf, swing_points_tf, tf_name)
+                
+                all_liquidita_tf = self.liquidita_multi_timeframe.get(tf_name, {})
+                valid_tf_poi = filtra_poi_validi(current_tf_poi, swing_points_tf, candele_tf, all_liquidita_tf)
+                all_poi.extend(valid_tf_poi)
+        
+        print(f"[DEBUG] Totale POI validi identificati su tutti i timeframe: {len(all_poi)}")
+
+        # 5. Logica di Trading
+        signal = None
+        stop_loss = 0.0
+        take_profit = 0.0
+        last_candle_main_tf = main_candele[-1]
+
+        timeframe_priority = {"MN1": 7, "W1": 6, "D1": 5, "H4": 4, "H1": 3, "M30": 2, "M15": 1, "M5": 0, "M1": -1}
+        all_poi.sort(key=lambda poi: timeframe_priority.get(poi.timeframe, -1), reverse=True)
+
+        for poi in all_poi:
+            poi_validity_bars = self.params.get("poi_validity_bars", 50)
+            timeframe_to_minutes = {
+                "M1": 1, "M5": 5, "M15": 15, "M30": 30,
+                "H1": 60, "H4": 240, "D1": 1440, "W1": 10080, "MN1": 43200
+            }
+            poi_timeframe_minutes = timeframe_to_minutes.get(poi.timeframe, 1)
+            max_validity_minutes = poi_validity_bars * poi_timeframe_minutes
+
+            time_diff_minutes = (last_candle_main_tf.timestamp - poi.candela_di_riferimento.timestamp).total_seconds() / 60
+            
+            if time_diff_minutes > max_validity_minutes:
+                print(f"[DEBUG] POI scartato per anzianità: {poi.tipo} {poi.direzione} su {poi.timeframe} (vecchio di {time_diff_minutes:.2f} min, max {max_validity_minutes} min)")
+                continue
+
+            current_price = last_candle_main_tf.close
+            
+            in_poi_zone = False
+            if poi.direzione == "Bullish":
+                if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
+                    in_poi_zone = True
+            elif poi.direzione == "Bearish":
+                if poi.prezzo_di_attivazione_bottom <= current_price <= poi.prezzo_di_attivazione_top:
+                    in_poi_zone = True
+            
+            if not in_poi_zone:
+                print(f"[DEBUG] POI scartato: {poi.tipo} {poi.direzione} su {poi.timeframe} (Motivo: Prezzo corrente {current_price:.5f} non nella zona del POI [{poi.prezzo_di_attivazione_bottom:.5f}-{poi.prezzo_di_attivazione_top:.5f}])")
+                continue
+            
+            trend_alignment = False
+            if poi.direzione == "Bullish" and self.trend in ["Bullish", "Indefinito"]:
+                trend_alignment = True
+            elif poi.direzione == "Bearish" and self.trend in ["Bearish", "Indefinito"]:
+                trend_alignment = True
+            
+            if not trend_alignment:
+                print(f"[DEBUG] POI scartato per disallineamento trend: POI {poi.direzione} vs Trend {self.trend}")
+                continue
+            
+            has_liquidity_target = False
+            if poi.direzione == "Bullish":
+                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
+                if tf_liquidita.get("buy_side", []):
+                    for liq_level in tf_liquidita["buy_side"]:
+                        if liq_level > current_price:
+                            has_liquidity_target = True
+                            break
+            elif poi.direzione == "Bearish":
+                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
+                if tf_liquidita.get("sell_side", []):
+                    for liq_level in tf_liquidita["sell_side"]:
+                        if liq_level < current_price:
+                            has_liquidity_target = True
+                            break
+            
+            if not has_liquidity_target:
+                print(f"[DEBUG] POI scartato per mancanza di liquidità target: {poi.tipo} {poi.direzione}")
+                continue
+            
+            # ===============================
+            # BLOCCO MODIFICATO SL/TP
+            # ===============================
+            if poi.direzione == "Bullish":
+                signal = "BUY"
+                buffer_percentage = 0.0005
+                rr = self.params.get("risk_reward_ratio", 2.0)
+
+                stop_loss = min(poi.prezzo_di_attivazione_bottom, current_price) * (1 - buffer_percentage)
+                risk = current_price - stop_loss
+
+                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
+                nearest_liquidity = None
+                for liq_level in tf_liquidita.get("buy_side", []):
+                    if liq_level > current_price:
+                        if nearest_liquidity is None or liq_level < nearest_liquidity:
+                            nearest_liquidity = liq_level
+
+                if nearest_liquidity:
+                    take_profit = max(nearest_liquidity, current_price + risk * rr)
+                else:
+                    take_profit = current_price + risk * rr
+
+                if not (stop_loss < current_price and take_profit > current_price and take_profit > stop_loss):
+                    print(f"[DEBUG] Segnale BUY scartato: SL/TP non validi. SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Current: {current_price:.5f}")
+                    signal = None
+                    continue
+
+                print(f"[DEBUG] Segnale BUY generato da POI {poi.tipo} Bullish ({poi.timeframe}) a {current_price:.5f}")
+                print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(take_profit-current_price)/risk:.2f}")
+                break
+
+            elif poi.direzione == "Bearish":
+                signal = "SELL"
+                buffer_percentage = 0.0005
+                rr = self.params.get("risk_reward_ratio", 2.0)
+
+                stop_loss = max(poi.prezzo_di_attivazione_top, current_price) * (1 + buffer_percentage)
+                risk = stop_loss - current_price
+
+                tf_liquidita = self.liquidita_multi_timeframe.get(poi.timeframe, {})
+                nearest_liquidity = None
+                for liq_level in tf_liquidita.get("sell_side", []):
+                    if liq_level < current_price:
+                        if nearest_liquidity is None or liq_level > nearest_liquidity:
+                            nearest_liquidity = liq_level
+
+                if nearest_liquidity:
+                    take_profit = min(nearest_liquidity, current_price - risk * rr)
+                else:
+                    take_profit = current_price - risk * rr
+
+                if not (stop_loss > current_price and take_profit < current_price and take_profit < stop_loss):
+                    print(f"[DEBUG] Segnale SELL scartato: SL/TP non validi. SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Current: {current_price:.5f}")
+                    signal = None
+                    continue
+
+                print(f"[DEBUG] Segnale SELL generato da POI {poi.tipo} Bearish ({poi.timeframe}) a {current_price:.5f}")
+                print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(current_price-take_profit)/risk:.2f}")
+                break
+            # ===============================
+            # FINE BLOCCO MODIFICATO
+            # ===============================
 
         if signal:
             new_signal = pd.DataFrame([{
