@@ -218,7 +218,8 @@ def identifica_liquidita_swing_points(swing_points: List[SwingPoint]) -> Dict[st
             # Sell Side Liquidity sotto il swing low
             liquidita["sell_side"].append(sp.candela.low)
     
-    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})")
+    print(f"[DEBUG] Liquidità identificata - Buy Side: {len(liquidita["buy_side"])}, Sell Side: {len(liquidita["sell_side"])})
+")
     return liquidita
 
 def trova_ultimo_low_prima_di(timestamp, lista_lows):
@@ -790,11 +791,23 @@ class TradingStrategy:
                 
                 if nearest_liquidity:
                     # TP basato sulla liquidità più vicina
-                    take_profit = nearest_liquidity * 0.999  # Leggermente sotto la liquidità per essere raggiunto
+                    take_profit = nearest_liquidity # Non sottraggo/aggiungo buffer qui, lo faccio dopo
                 else:
                     # TP basato sul risk/reward ratio se non c\"è liquidità vicina
                     take_profit = current_price + (risk * self.params.get("risk_reward_ratio", 2.0))
                 
+                # Aggiungo un piccolo buffer al TP per BUY per assicurare che sia sopra il prezzo di entrata
+                if take_profit <= current_price: # Se il TP calcolato è sotto o uguale al prezzo corrente, lo aggiusto
+                    take_profit = current_price + (risk * self.params.get("risk_reward_ratio", 2.0))
+
+                # Validazione finale di SL e TP per BUY
+                # SL deve essere minore del prezzo corrente e TP maggiore del prezzo corrente
+                # E TP deve essere maggiore di SL
+                if not (stop_loss < current_price and take_profit > current_price and take_profit > stop_loss):
+                    print(f"[DEBUG] Segnale BUY scartato: SL/TP non validi. SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Current: {current_price:.5f}")
+                    signal = None # Annulla il segnale se SL/TP non validi
+                    continue
+
                 print(f"[DEBUG] Segnale BUY generato da POI {poi.tipo} Bullish ({poi.timeframe}) a {current_price:.5f}")
                 print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(take_profit-current_price)/risk:.2f}")
                 break
@@ -822,11 +835,23 @@ class TradingStrategy:
                 
                 if nearest_liquidity:
                     # TP basato sulla liquidità più vicina
-                    take_profit = nearest_liquidity * 1.001  # Leggermente sopra la liquidità per essere raggiunto
+                    take_profit = nearest_liquidity # Non sottraggo/aggiungo buffer qui, lo faccio dopo
                 else:
                     # TP basato sul risk/reward ratio se non c\"è liquidità vicina
                     take_profit = current_price - (risk * self.params.get("risk_reward_ratio", 2.0))
                 
+                # Aggiungo un piccolo buffer al TP per SELL per assicurare che sia sotto il prezzo di entrata
+                if take_profit >= current_price: # Se il TP calcolato è sopra o uguale al prezzo corrente, lo aggiusto
+                    take_profit = current_price - (risk * self.params.get("risk_reward_ratio", 2.0))
+
+                # Validazione finale di SL e TP per SELL
+                # SL deve essere maggiore del prezzo corrente e TP minore del prezzo corrente
+                # E TP deve essere minore di SL
+                if not (stop_loss > current_price and take_profit < current_price and take_profit < stop_loss):
+                    print(f"[DEBUG] Segnale SELL scartato: SL/TP non validi. SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Current: {current_price:.5f}")
+                    signal = None # Annulla il segnale se SL/TP non validi
+                    continue
+
                 print(f"[DEBUG] Segnale SELL generato da POI {poi.tipo} Bearish ({poi.timeframe}) a {current_price:.5f}")
                 print(f"[DEBUG] SL: {stop_loss:.5f}, TP: {take_profit:.5f}, Risk: {risk:.5f}, RR: {(current_price-take_profit)/risk:.2f}")
                 break
