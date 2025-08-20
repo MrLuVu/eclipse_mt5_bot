@@ -92,3 +92,40 @@ def predict_live(new_trade_dict):
 
 
 C:\Users\luigi\Desktop\eclipse_mt5_bot\ai_model.py:199: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+
+def predict_live(new_trade_dict):
+    """Restituisce probabilità che il nuovo trade sia positivo"""
+    if not os.path.exists(MODEL_FILE):
+        print("[INFO] Nessun modello salvato, avvio addestramento...")
+        train_ai_model()
+    
+    data = joblib.load(MODEL_FILE)
+    model = data["model"]
+    encoded_columns = data["encoded_columns"]
+    
+    # Crea direttamente un array con tutti zeri
+    final_data = np.zeros((1, len(encoded_columns)))
+    
+    # Popola solo le colonne presenti nel nuovo trade
+    for col, value in new_trade_dict.items():
+        # Cerca colonne che iniziano con il nome della feature originale
+        matching_cols = [c for c in encoded_columns if c.startswith(f"{col}_")]
+        
+        if matching_cols:
+            # Se è una variabile categorica (one-hot encoded)
+            for match_col in matching_cols:
+                if match_col == f"{col}_{value}":
+                    final_data[0, encoded_columns.index(match_col)] = 1
+        else:
+            # Se è una variabile numerica
+            if col in encoded_columns:
+                final_data[0, encoded_columns.index(col)] = value
+    
+    final_df = pd.DataFrame(final_data, columns=encoded_columns)
+    
+    try:
+        prob = model.predict_proba(final_df)[0][1]
+        return prob
+    except Exception as e:
+        print(f"[ERRORE] nella predizione: {e}")
+        return 0.5
