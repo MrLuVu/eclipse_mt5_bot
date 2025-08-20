@@ -89,3 +89,6 @@ def predict_live(new_trade_dict):
         print(f"Prime 10 colonne attese: {encoded_columns[:10]}")
         print(f"Prime 10 colonne ottenute: {df_new_encoded.columns.tolist()[:10]}")
         return 0.5  # Valore neutro in caso di errore
+
+
+C:\Users\luigi\Desktop\eclipse_mt5_bot\ai_model.py:199: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
